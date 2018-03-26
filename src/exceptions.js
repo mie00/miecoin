@@ -88,3 +88,10 @@ var DoubleSpendingException = module.exports.DoubleSpendingException = function 
   Error.captureStackTrace(this, DoubleSpendingException)
 }
 DoubleSpendingException.prototype = Object.create(Error.prototype)
+
+var SameHeightException = module.exports.SameHeightException = function SameHeightException (message) {
+  this.message = message
+  this.name = 'SameHeightException'
+  Error.captureStackTrace(this, SameHeightException)
+}
+SameHeightException.prototype = Object.create(Error.prototype)

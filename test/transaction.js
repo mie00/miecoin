@@ -1,5 +1,5 @@
 var should = require('should')
-var sinon = require('sinon')
+var crypto = require('crypto')
 
 var Transaction = require('../src/transaction')
 var models = {}
@@ -10,10 +10,16 @@ var utils = require('../src/utils')
 
 var assert = require('assert')
 describe('Transaction', function () {
-  describe('verify_merkle_root', function () {
+  describe('calculate_merkle_root', function () {
+    it('should work for no trasnsactions', function () {
+      transaction.calculate_merkle_root([]).should.equal(crypto.createHash('sha256').update('').digest('base64'))
+    })
+  })
+  describe('verify_merkle', function () {
     xit('should work')
   })
   describe('verify_non_block_transactions', function () {
+    xit('should consider parent transactions')
     it('should work', function (done) {
       var testTransaction = factory.transaction
       var otx = testTransaction.components.filter((x) => x.type === 'otx')
@@ -27,12 +33,12 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
-      transaction.verify_non_block_transactions([{'components': components}], function (err, change) {
+      }
+      transaction.verify_non_block_transactions([{'components': components}], {}, 10, function (err, res) {
         assert(err === null)
-        change.should.equal(testTransaction._change)
+        res.change.should.equal(testTransaction._change)
         done()
       })
     })
@@ -49,10 +55,10 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
-      transaction.verify_non_block_transactions([{'components': components}, {'components': components}], function (err, res) {
+      }
+      transaction.verify_non_block_transactions([{'components': components}, {'components': components}], {}, 10, function (err, res) {
         (() => should.ifError(err)).should.throw(new exceptions.DoubleSpendingException())
         done()
       })
@@ -70,10 +76,10 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
-      transaction.verify_non_block_transactions([{'components': components}, {'components': components}], function (err, change) {
+      }
+      transaction.verify_non_block_transactions([{'components': components}, {'components': components}], {}, 10, function (err, change) {
         (() => should.ifError(err)).should.throw(new exceptions.InvalidTransactionSignatureException())
         done()
       })
@@ -108,10 +114,10 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
-      transaction.verify({'components': components}, function (err, res) {
+      }
+      transaction.verify({'components': components}, 10, function (err, res) {
         assert(err === null)
         res.change.should.equal(testTransaction._change)
         done()
@@ -130,11 +136,11 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
+      }
       otx[0].amount += 1
-      transaction.verify({'components': components}, function (err) {
+      transaction.verify({'components': components}, 10, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.NonMatchingInOutException())
         done()
       })
@@ -152,11 +158,11 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
+      }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, function (err) {
+      transaction.verify({'components': components}, 10, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.NonMatchingInOutException())
         done()
       })
@@ -174,11 +180,11 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
+      }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, function (err) {
+      transaction.verify({'components': components}, 10, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.InvalidTransactionSignatureException())
         done()
       })
@@ -197,11 +203,11 @@ describe('Transaction', function () {
         }
         return s
       })
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
-      })
+      }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, function (err) {
+      transaction.verify({'components': components}, 10, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.UnavailableAmountException())
         done()
       })
@@ -281,12 +287,13 @@ describe('Transaction', function () {
     })
   })
   describe('get_sources', function () {
+    xit('should get only less than block height')
     it('should get sources', function (done) {
       var sources = factory.sources
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, sources.map((x) => x.source))
-      })
-      transaction.get_sources(sources.map((x) => x.itx), function (err, res) {
+      }
+      transaction.get_sources(sources.map((x) => x.itx), 10, function (err, res) {
         assert(err === null)
         assert(res.filter((x) => x.source !== x.otx.hash).length === 0)
         done()
@@ -294,10 +301,10 @@ describe('Transaction', function () {
     })
     it('should not get unmatching sources', function (done) {
       var sources = factory.unmatchingSources
-      models.selectUTXO = (function (s, cb) {
+      models.selectUTXO = function (s, h, cb) {
         return cb(null, sources.map((x) => x.source))
-      })
-      transaction.get_sources(sources.map((x) => x.itx), function (err, res) {
+      }
+      transaction.get_sources(sources.map((x) => x.itx), 10, function (err, res) {
         assert(err === null)
         var unmatching = res.filter((x) => !x.otx || x.source !== x.otx.hash)
         assert(unmatching.length === 1)

@@ -51,7 +51,7 @@ describe('Block', function () {
   })
   describe('verify', function () {
     it('should not verify invalid transaction', function (done) {
-      block.verify(factory.blocks[1], factory.authors, function (err) {
+      block.verify(factory.blocks[1], factory.authors, 100, {}, {}, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.InvalidSignatureException())
         done()
       })

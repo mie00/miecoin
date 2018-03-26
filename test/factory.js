@@ -60,7 +60,7 @@ module.exports = {
     'to_hash': 'this is the otx that it will go into'
   },
   'invalidToHashTransaction': {
-    'blockTransaction': false,
+    'block_ransaction': false,
     'components': [
       {
         'type': 'otx',
@@ -75,7 +75,7 @@ module.exports = {
     ]
   },
   'invalidToHashTransaction2': {
-    'blockTransaction': false,
+    'block_transaction': false,
     'components': [
       {
         'type': 'otx',

@@ -1,8 +1,9 @@
 module.exports = function (connection) {
   var module = {}
-  module.selectUTXO = function (hashes, cb) {
+  module.selectUTXO = function (hashes, blockHeight, cb) {
     return connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
-                             WHERE i.source IS NULL AND o.hash in ?`, [hashes],
+                             LEFT OUTER JOIN tx AS it ON (i.tx = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
+                             WHERE (i.source IS NULL OR block.Height <= ?) AND o.hash in ?`, [blockHeight, hashes],
       function (err, results, fields) {
         return cb(err, results)
       })
@@ -11,6 +12,26 @@ module.exports = function (connection) {
     connection.query('SELECT height, hash FROM block WHERE height in ?', [heights],
       function (err, results, fields) {
         return cb(err, results)
+      })
+  }
+  module.getBlocksHeight = function (cb) {
+    connection.query('SELECT MAX(height) AS m FROM block',
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results.length ? results[0].m : 0)
+        }
+      })
+  }
+  module.getLastBlock = function (cb) {
+    connection.query('SELECT * FROM block ORDER BY height DESC LIMIT 1',
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results[0])
+        }
       })
   }
   module.add_block = function (block) {
