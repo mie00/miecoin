@@ -21,7 +21,7 @@ module.exports = function (services) {
     })
   }
   this.flush = function (miningReward, privateKey, publicKey, data, cb) {
-    return services.block.generate_lock(this.get_from_pool(), miningReward, privateKey, publicKey, data, function (err, block) {
+    return services.block.generate_block(this.get_from_pool(), miningReward, privateKey, publicKey, data, function (err, block) {
       if (err) {
         return cb(err)
       } else {
@@ -37,16 +37,19 @@ module.exports = function (services) {
     })
   }
   module.empty_pool = function () {
-    // TODO: implement
+    Object.keys(this.transactionPool).forEach((x) => {
+      delete this.transactionPool[x]
+    })
   }
   module.add_to_pool = function (transaction) {
-    // TODO: implement
+    var hash = services.transaction.calculate_hash()
+    this.transactionPool[hash] = transaction
   }
   module.get_from_pool = function () {
-    // TODO: implement
+    return Object.keys(this.transactionPool).map((k) => this.transactionPool[k])
   }
   module.count_pool = function () {
-    // TODO: implement
+    return Object.keys(this.transactionPool).length
   }
   return module
 }

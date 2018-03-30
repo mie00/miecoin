@@ -17,12 +17,24 @@ module.exports = function (services, models) {
   module.getBlockHeight = function (cb) {
     models.getBlockHeight(cb)
   }
-  module.getLastBlockt = function (cb) {
-    models.getLastBlockt(cb)
+  module.getLastBlock = function (cb) {
+    models.getLastBlock(cb)
+  }
+  module.getGensisBlock = function (cb) {
+    models.getGenesisBlock(cb)
+  }
+  module.getAuthorizedKeys = function (cb) {
+    models.getFirstRawData(function (err, res) {
+      if (err) {
+        return cb(err)
+      } else {
+        return cb(null, JSON.parse(res).authorized_keys)
+      }
+    })
   }
   module.generate_block = function (transactions, miningReward, privateKey, publicKey, data, cb) {
     var self = this
-    self.getLastBlockt(function (err, block) {
+    self.getLastBlock(function (err, block) {
       if (err) {
         return cb(err)
       } else {

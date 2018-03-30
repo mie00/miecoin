@@ -52,7 +52,8 @@ module.exports = {
   'itx': {
     'type': 'itx',
     'source': 'some source',
-    'to_hash': 'this is the otx that it will go into'
+    'to_hash': 'this is the otx that it will go into',
+    'signature': 'somesignature'
   },
   'unknownComponent': {
     'type': 'somthing',
@@ -69,7 +70,8 @@ module.exports = {
       }, {
         'type': 'itx',
         'source': 'some source',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       }
 
     ]
@@ -84,7 +86,8 @@ module.exports = {
       }, {
         'type': 'itx',
         'source': 'some source',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       }
 
     ]
@@ -94,7 +97,8 @@ module.exports = {
       'itx': {
         'type': 'itx',
         'source': 'some source',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       },
       'source': {
         'amount': 1002,
@@ -106,7 +110,8 @@ module.exports = {
       'itx': {
         'type': 'itx',
         'source': 'some source123',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       },
       'source': {
         'amount': 1002,
@@ -120,7 +125,8 @@ module.exports = {
       'itx': {
         'type': 'itx',
         'source': 'some source',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       },
       'source': {
         'amount': 1002,
@@ -132,7 +138,8 @@ module.exports = {
       'itx': {
         'type': 'itx',
         'source': 'some source123',
-        'to_hash': 'this is the otx that it will go into'
+        'to_hash': 'this is the otx that it will go into',
+        'signature': 'somesignature'
       },
       'source': {
         'amount': 1002,

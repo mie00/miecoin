@@ -5,21 +5,25 @@ module.exports.sign = function (buffer, privateKey) {
 module.exports.verify = function (buffer, publicKey, signature) {
   return crypto.createVerify('ecdsa-with-SHA1').update(buffer).verify(publicKey, Buffer.from(signature, 'base64'))
 }
-module.exports.hash = function (input) {
-  return crypto.createHash('sha256').update(input).digest('base64')
+module.exports.hashBuffer = function hashBuffer (input) {
+  return crypto.createHash('sha256').update(input).digest()
 }
+module.exports.hash = function hash (input) {
+  return this.hashBuffer(input).toString('hex')
+}
+module.exports.hashLength = module.exports.hashBuffer('').length
 module.exports.calculate_merkle = function (items) {
-  if (items.length === 0) return this.hash(Buffer.alloc(0))
+  if (items.length === 0) return Buffer.alloc(this.hashLength)
   if (items.length === 1) return items[0]
   var res = []
   for (var i = 0; i < items.length; i += 2) {
     var b0 = items[i]
-    var b1 = items[i + 1] || Buffer.alloc(0)
-    res.push(this.hash(Buffer.concat([b0, b1])))
+    var b1 = items[i + 1] || Buffer.alloc(this.hashLength)
+    res.push(this.hashBuffer(Buffer.concat([b0, b1])))
   }
   return this.calculate_merkle(res)
 }
-module.exports.groupBy = function (collection, key) {
+module.exports.mapBy = function (collection, key) {
   var res = {}
   for (var item of collection) {
     res[item[key]] = item

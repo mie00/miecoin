@@ -11,8 +11,9 @@ var utils = require('../src/utils')
 var assert = require('assert')
 describe('Transaction', function () {
   describe('calculate_merkle_root', function () {
+    var zeros = Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex')
     it('should work for no trasnsactions', function () {
-      transaction.calculate_merkle_root([]).should.equal(crypto.createHash('sha256').update('').digest('base64'))
+      transaction.calculate_merkle_root([]).should.match(zeros)
     })
   })
   describe('verify_merkle', function () {
@@ -29,7 +30,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
@@ -51,7 +52,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
@@ -72,7 +73,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr2)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr2)
         }
         return s
       })
@@ -88,13 +89,13 @@ describe('Transaction', function () {
   describe('verify_block_transaction', function () {
     it('should work', function (done) {
       var testTransaction = factory.blockTransaction
-      transaction.verify_block_transactions([testTransaction], -testTransaction._change - 100, 100, function (err) {
+      transaction.verify_block_transactions([testTransaction], {}, 10, -testTransaction._change - 100, 100, function (err) {
         done(err)
       })
     })
     it('should not work if exceeds amount', function (done) {
       var testTransaction = factory.blockTransaction
-      transaction.verify_block_transactions([testTransaction], -testTransaction._change - 100, 100 - 1, function (err) {
+      transaction.verify_block_transactions([testTransaction], {}, 10, -testTransaction._change - 100, 100 - 1, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.OverSpendingException())
         done()
       })
@@ -110,14 +111,14 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
       models.selectUTXO = function (s, h, cb) {
         return cb(null, utxo)
       }
-      transaction.verify({'components': components}, 10, function (err, res) {
+      transaction.verify({'components': components}, 10, true, function (err, res) {
         assert(err === null)
         res.change.should.equal(testTransaction._change)
         done()
@@ -132,7 +133,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
@@ -140,7 +141,7 @@ describe('Transaction', function () {
         return cb(null, utxo)
       }
       otx[0].amount += 1
-      transaction.verify({'components': components}, 10, function (err) {
+      transaction.verify({'components': components}, 10, true, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.NonMatchingInOutException())
         done()
       })
@@ -154,7 +155,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
@@ -162,7 +163,7 @@ describe('Transaction', function () {
         return cb(null, utxo)
       }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, 10, function (err) {
+      transaction.verify({'components': components}, 10, true, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.NonMatchingInOutException())
         done()
       })
@@ -176,7 +177,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr2)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr2)
         }
         return s
       })
@@ -184,7 +185,7 @@ describe('Transaction', function () {
         return cb(null, utxo)
       }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, 10, function (err) {
+      transaction.verify({'components': components}, 10, true, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.InvalidTransactionSignatureException())
         done()
       })
@@ -199,7 +200,7 @@ describe('Transaction', function () {
       var components = testTransaction.components.map((s) => {
         if (s.type === 'itx') {
           s.to_hash = toHash
-          s.signature = utils.sign(transaction.itx_to_buffer(s), factory.pr1)
+          s.signature = utils.sign(transaction.plain_itx_to_buffer(s), factory.pr1)
         }
         return s
       })
@@ -207,7 +208,7 @@ describe('Transaction', function () {
         return cb(null, utxo)
       }
       otx[0].public_key = factory.pu2
-      transaction.verify({'components': components}, 10, function (err) {
+      transaction.verify({'components': components}, 10, true, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.UnavailableAmountException())
         done()
       })
@@ -244,7 +245,7 @@ describe('Transaction', function () {
     it('should not work when signed with a different private key', function (done) {
       var itxSources = factory.otxItxSources.itxSources
       itxSources.map((itxSource) => {
-        itxSource.signature = utils.sign(transaction.itx_to_buffer(itxSource), factory.pr2)
+        itxSource.signature = utils.sign(transaction.plain_itx_to_buffer(itxSource), factory.pr2)
       })
       transaction.verify_signatures(itxSources, function (err) {
         (() => should.ifError(err)).should.throw(new exceptions.InvalidTransactionSignatureException())
@@ -254,7 +255,7 @@ describe('Transaction', function () {
     it('should work when signed with the corresponding private key', function (done) {
       var itxSources = factory.otxItxSources.itxSources
       itxSources.map((itxSource) => {
-        itxSource.signature = utils.sign(transaction.itx_to_buffer(itxSource), factory.pr1)
+        itxSource.signature = utils.sign(transaction.plain_itx_to_buffer(itxSource), factory.pr1)
       })
       transaction.verify_signatures(itxSources, function (err) {
         done(err)
@@ -264,7 +265,7 @@ describe('Transaction', function () {
   describe('verify_amount', function () {
     it('should work', function (done) {
       var sources = factory.otxItxSources
-      transaction.verify_amount(sources.otx, sources.itxSources, function (err, change) {
+      transaction.verify_amount(sources.otx, sources.itxSources, true, function (err, change) {
         assert(err === null)
         change.should.equal(sources.change)
         done()
@@ -272,14 +273,14 @@ describe('Transaction', function () {
     })
     it('should raise if no enough money', function (done) {
       var sources = factory.otxItxSourcesNoEnough
-      transaction.verify_amount(sources.otx, sources.itxSources, function (err, change) {
+      transaction.verify_amount(sources.otx, sources.itxSources, true, function (err, change) {
         (() => should.ifError(err)).should.throw(new exceptions.UnavailableAmountException())
         done()
       })
     })
     it('should work on barely enough money', function (done) {
       var sources = factory.otxItxSourcesBarelyEnough
-      transaction.verify_amount(sources.otx, sources.itxSources, function (err, change) {
+      transaction.verify_amount(sources.otx, sources.itxSources, true, function (err, change) {
         assert(err === null)
         change.should.equal(0)
         done()
@@ -328,8 +329,8 @@ describe('Transaction', function () {
       assert(type.compare(buffer, second, second + type.length) === 0)
       var source = Buffer.from(factory.itx.source)
       assert(source.compare(buffer, second + 16, second + 16 + source.length) === 0)
-      var toHash = Buffer.from(factory.itx.to_hash)
-      assert(toHash.compare(buffer, second + 16 + 256, second + 16 + 256 + toHash.length) === 0)
+      var signature = Buffer.from(factory.itx.signature)
+      assert(signature.compare(buffer, second + 16 + 256, second + 16 + 256 + signature.length) === 0)
     })
   })
   describe('components_to_buffer', function () {
@@ -340,8 +341,8 @@ describe('Transaction', function () {
       assert(type.compare(buffer, second, second + type.length) === 0)
       var source = Buffer.from(factory.itx.source)
       assert(source.compare(buffer, second + 16, second + 16 + source.length) === 0)
-      var toHash = Buffer.from(factory.itx.to_hash)
-      assert(toHash.compare(buffer, second + 16 + 256, second + 16 + 256 + toHash.length) === 0)
+      var signature = Buffer.from(factory.itx.signature)
+      assert(signature.compare(buffer, second + 16 + 256, second + 16 + 256 + signature.length) === 0)
     })
   })
   describe('component_to_buffer', function () {
@@ -351,11 +352,22 @@ describe('Transaction', function () {
       assert(type.compare(buffer, 0, type.length) === 0)
       var source = Buffer.from(factory.itx.source)
       assert(source.compare(buffer, 16, 16 + source.length) === 0)
-      var toHash = Buffer.from(factory.itx.to_hash)
-      assert(toHash.compare(buffer, 16 + 256, 16 + 256 + toHash.length) === 0)
+      var signature = Buffer.from(factory.itx.signature)
+      assert(signature.compare(buffer, 16 + 256, 16 + 256 + signature.length) === 0)
     })
     it('should throw error when unknown component', function () {
       (() => transaction.component_to_buffer(factory.unknownComponent)).should.throw(new exceptions.UnknownComponentTypeException())
+    })
+  })
+  describe('plain_itx_to_buffer', function () {
+    it('should be reversable', function () {
+      var buffer = transaction.plain_itx_to_buffer(factory.itx)
+      var type = Buffer.from(factory.itx.type)
+      assert(type.compare(buffer, 0, type.length) === 0)
+      var source = Buffer.from(factory.itx.source)
+      assert(source.compare(buffer, 16, 16 + source.length) === 0)
+      var toHash = Buffer.from(factory.itx.to_hash)
+      assert(toHash.compare(buffer, 16 + 256, 16 + 256 + toHash.length) === 0)
     })
   })
   describe('itx_to_buffer', function () {
@@ -365,7 +377,7 @@ describe('Transaction', function () {
       assert(type.compare(buffer, 0, type.length) === 0)
       var source = Buffer.from(factory.itx.source)
       assert(source.compare(buffer, 16, 16 + source.length) === 0)
-      var toHash = Buffer.from(factory.itx.to_hash)
+      var toHash = Buffer.from(factory.itx.signature)
       assert(toHash.compare(buffer, 16 + 256, 16 + 256 + toHash.length) === 0)
     })
   })

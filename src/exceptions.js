@@ -95,3 +95,10 @@ var SameHeightException = module.exports.SameHeightException = function SameHeig
   Error.captureStackTrace(this, SameHeightException)
 }
 SameHeightException.prototype = Object.create(Error.prototype)
+
+var ItxInBlockTransactionException = module.exports.ItxInBlockTransactionException = function ItxInBlockTransactionException (message) {
+  this.message = message
+  this.name = 'ItxInBlockTransactionException'
+  Error.captureStackTrace(this, ItxInBlockTransactionException)
+}
+ItxInBlockTransactionException.prototype = Object.create(Error.prototype)

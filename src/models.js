@@ -34,6 +34,31 @@ module.exports = function (connection) {
         }
       })
   }
+  module.getFirstRawData = function (cb) {
+    connection.query(`SELECT raw_data.data FROM raw_data JOIN tx ON (raw_data.tx_hash = tx.hash)
+    JOIN block ON (tx.block_hash = block.hash) WHERE block.height = 0`,
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results[0])
+        }
+      })
+  }
+  module.getGenesisBlock = function (cb) {
+    connection.query('SELECT * FROM block ORDER BY height ASC LIMIT 1',
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results[0])
+        }
+      })
+  }
+  module.removeFrom = function (height) {
+    // It works because of on delete cascade
+    return connection.format('DELETE FROM block WHERE height = ?', height)
+  }
   module.add_block = function (block) {
     return connection.format('INSERT INTO block SET ?', block)
   }

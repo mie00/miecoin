@@ -12,5 +12,8 @@
     },
     "authority": {
         "public_keys": []
+    },
+    "mining": {
+        "reward": 100
     }
 }
