@@ -43,19 +43,30 @@ module.exports = function (services, models) {
       } else {
         var otx = self.generate_otx(res.change + miningReward, publicKey)
         var rawData = data.map((d) => self.generate_raw_data(d))
-        var blockTransaction = {'block_transaction': false, components: rawData.concat([otx])}
+        var blockTransaction = {'block_transaction': true, 'components': rawData.concat([otx])}
         return cb(null, blockTransaction)
       }
     })
   }
-  module.generate_non_block_transaction = function (data, otx, itx) {
+  module.generate_non_block_transaction = function (data, otx, itx, blockHeight, cb) {
+    var self = this
+    var transaction = self.create_non_block_transaction(data, otx, itx)
+    return self.verify_non_block_transactions([transaction], {}, blockHeight, function (err, res) {
+      if (err) {
+        return cb(err)
+      } else {
+        return cb(null, transaction)
+      }
+    })
+  }
+  module.create_non_block_transaction = function (data, otx, itx) {
     var nonItx = data.map((d) => this.generate_raw_data(d)).concat(otx.map((o) => this.generate_otx(o.amount, o.public_key)))
     var otxHash = utils.hash(this.components_to_buffer(nonItx))
-    return {'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash)))}
+    return {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash)))}
   }
   module.generate_raw_data = function (data) {
     var rawData = {
-      'type': 'rawData',
+      'type': 'raw_data',
       'data': data
     }
     return rawData
@@ -207,7 +218,8 @@ module.exports = function (services, models) {
     return utils.hash(this.to_buffer(transaction))
   }
   module.to_buffer = function (transaction) {
-    return this.components_to_buffer(transaction.components)
+    var buffer = Buffer.alloc(8).fill(transaction.block_transaction ? 1 : 0)
+    return Buffer.concat([buffer, this.components_to_buffer(transaction.components)])
   }
   module.components_to_buffer = function (components) {
     return Buffer.concat(components.map((component) => this.component_to_buffer(component)))

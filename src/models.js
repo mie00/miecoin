@@ -8,6 +8,14 @@ module.exports = function (connection) {
         return cb(err, results)
       })
   }
+  module.selectUTXOByPublicKey = function (publicKey, cb) {
+    return connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
+                             LEFT OUTER JOIN tx AS it ON (i.tx = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
+                             WHERE (i.source IS NULL) AND o.public_key = ?`, [publicKey],
+      function (err, results, fields) {
+        return cb(err, results)
+      })
+  }
   module.selectBlocksByHeight = function (heights, cb) {
     connection.query('SELECT height, hash FROM block WHERE height in ?', [heights],
       function (err, results, fields) {
@@ -31,6 +39,26 @@ module.exports = function (connection) {
           return cb(err)
         } else {
           return cb(null, results[0])
+        }
+      })
+  }
+  module.getLastBlocks = function (limit, cb) {
+    connection.query('SELECT * FROM block ORDER BY height DESC LIMIT ?', [limit],
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results)
+        }
+      })
+  }
+  module.getBlocks = function (from, limit, cb) {
+    connection.query('SELECT * FROM block WHERE HEIGHT <= ? ORDER BY height DESC LIMIT ?', [from, limit],
+      function (err, results, fields) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, results)
         }
       })
   }
@@ -68,7 +96,7 @@ module.exports = function (connection) {
   module.add_itx = function (itx) {
     return connection.format('INSERT INTO itx SET ?', itx)
   }
-  module.add_otx = function (itx) {
+  module.add_otx = function (otx) {
     return connection.format('INSERT INTO otx SET ?', otx)
   }
   module.add_raw_data = function (rawData) {

@@ -10,6 +10,34 @@ var utils = require('../src/utils')
 
 var assert = require('assert')
 describe('Transaction', function () {
+  describe('generate_itx', function () {
+    it('should generate input transaction', function () {
+      var source = 'somesource'
+      var toHash = 'sometohash'
+      var tx = transaction.generate_itx(source, factory.pr1, toHash)
+      tx.type.should.equal('itx')
+      tx.source.should.equal(source)
+      tx.to_hash.should.equal(toHash)
+      utils.verify(transaction.plain_itx_to_buffer(tx), factory.pu1, tx.signature).should.equal(true)
+    })
+  })
+  describe('generate_otx', function () {
+    it('should generate output transaction', function () {
+      var amount = 100
+      var tx = transaction.generate_otx(amount, factory.pu1)
+      tx.type.should.equal('otx')
+      tx.amount.should.equal(amount)
+      tx.public_key.should.equal(factory.pu1)
+    })
+  })
+  describe('generate_raw_data', function () {
+    it('should generate raw data transaction', function () {
+      var data = 'mie'
+      var tx = transaction.generate_raw_data(data)
+      tx.type.should.equal('raw_data')
+      tx.data.should.equal(data)
+    })
+  })
   describe('calculate_merkle_root', function () {
     var zeros = Buffer.from('0000000000000000000000000000000000000000000000000000000000000000', 'hex')
     it('should work for no trasnsactions', function () {
@@ -324,7 +352,7 @@ describe('Transaction', function () {
   describe('to_buffer', function () {
     it('should work for the second component', function () {
       var buffer = transaction.to_buffer(factory.invalidToHashTransaction)
-      var second = 16 + 256 + 1024
+      var second = 8 + 16 + 256 + 1024
       var type = Buffer.from(factory.itx.type)
       assert(type.compare(buffer, second, second + type.length) === 0)
       var source = Buffer.from(factory.itx.source)

@@ -13,5 +13,13 @@ module.exports = function (services, models) {
   module.verify = function (blocks, authors, miningReward, cb) {
     return utils.serial(blocks.map((block) => services.block.verify.bind(services.block, block, authors, miningReward, {}, {})), cb)
   }
+  module.getBlocks = function (from, limit, cb) {
+    limit = limit || 1
+    if (from) {
+      return models.getBlocks(from, limit, cb)
+    } else {
+      return models.getLastBlocks(limit, cb)
+    }
+  }
   return module
 }

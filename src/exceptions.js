@@ -102,3 +102,10 @@ var ItxInBlockTransactionException = module.exports.ItxInBlockTransactionExcepti
   Error.captureStackTrace(this, ItxInBlockTransactionException)
 }
 ItxInBlockTransactionException.prototype = Object.create(Error.prototype)
+
+var NotEnoughMoneyToSpendException = module.exports.NotEnoughMoneyToSpendException = function NotEnoughMoneyToSpendException (message) {
+  this.message = message
+  this.name = 'NotEnoughMoneyToSpendException'
+  Error.captureStackTrace(this, NotEnoughMoneyToSpendException)
+}
+NotEnoughMoneyToSpendException.prototype = Object.create(Error.prototype)

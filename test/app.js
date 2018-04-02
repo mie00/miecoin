@@ -5,10 +5,10 @@ after(function (done) {
   app.connection.destroy()
   done()
 })
-describe('get /hi', function () {
+describe('get /api/hi', function () {
   it('should return hey', function (done) {
     request(app)
-      .get('/hi')
+      .get('/api/hi')
       .expect('hey', done)
   })
 })

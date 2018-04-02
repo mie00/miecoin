@@ -1,4 +1,4 @@
-module.exports = function (services) {
+module.exports = function (services, models) {
   var module = {}
   module.transactionPool = {}
   module.add = function (transaction, cb) {

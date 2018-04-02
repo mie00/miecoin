@@ -23,6 +23,7 @@
     "config": "^1.30.0",
     "express": "^4.16.3",
     "mysql": "^2.15.0",
+    "request": "^2.85.0",
     "rwlock": "^5.0.0"
   },
   "devDependencies": {

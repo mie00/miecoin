@@ -1,7 +1,6 @@
 var config = require('config')
 const express = require('express')
 var mysql = require('mysql')
-var ReadWriteLock = require('rwlock')
 
 var exceptions = require('./exceptions')
 
@@ -28,6 +27,7 @@ var Chain = require('../src/chain')
 var Block = require('../src/block')
 var Transaction = require('../src/transaction')
 var Pool = require('../src/pool')
+var Wallet = require('../src/wallet')
 
 var models = Models(connection)
 var transaction = Transaction(services, models)
@@ -36,68 +36,31 @@ var block = Block(services, models)
 services.block = block
 var chain = Chain(services, models)
 services.chain = chain
-var pool = Pool(services)
+var pool = Pool(services, models)
 services.pool = pool
+var wallet = Wallet(services, models, config.get('wallet.private_key'), config.get('wallet.public_key'))
+services.wallet = wallet
 
-app.get('/hi', (req, res) => res.send('hey'))
+var apiController = require('./api_controller')(services)
+var rpcController = require('./rpc_controller')(services)
 
-var newTransactionLock = new ReadWriteLock()
-app.post('/transaction', (req, res) => {
-  newTransactionLock.writeLock(function (release) {
-    services.pool.add(req.body.transaction, function (err, res) {
-      release()
-      if (err) {
-        return res.status(404).end()
-      } else {
-        return res.status(200).end()
-      }
-    })
-  })
+app.get('/api/hi', apiController.hi)
+app.post('/api/transaction', apiController.announceTransaction)
+app.post('/api/block', apiController.announceBlock)
+app.get('/api/block', apiController.listBlocks)
+
+app.all('/rpc/.*', (req, res, next) => {
+  var auth = req.headers['authorization']
+  var token = Buffer.from(config.get('rpc.username') + config.get('rpc.password')).toString('base64')
+  var expected = 'Basic ' + token
+  if (expected === auth) {
+    return next()
+  } else {
+    return res.send(401).end()
+  }
 })
-
-var addBlocks = function (blocks, cb) {
-  services.block.getAuthorizedKeys(function (err, keys) {
-    if (err) {
-      return cb(err)
-    } else {
-      services.chain.verify(blocks, keys, config.get('mining.reward'), function (err) {
-        if (err) {
-          return cb(err)
-        } else {
-          services.chain.add(blocks, function (err) {
-            if (err) {
-              return cb(err)
-            } else {
-              return cb(null)
-            }
-          })
-        }
-      })
-    }
-  })
-}
-
-var processNewBlocks = function (blocks, peer, cb) {
-  return addBlocks(blocks, function (err) {
-    if (!err) {
-      return cb(null)
-    } else if (err instanceof exceptions.UnknownParentException) {
-      return peer.getBlocks(Math.min.apply(Math, blocks.map((block) => block.height)), blocks.length, function (err, res) {
-        if (err) {
-          return cb(err)
-        } else {
-          return processNewBlocks(res.concat(blocks), peer, cb)
-        }
-      })
-    }
-  })
-}
-
-var blockSyncLock = new ReadWriteLock()
-app.post('/block', (req, res) => {
-  blockSyncLock.writeLock(function (release) {
-    processNewBlocks()
-  })
-})
+app.post('/rpc/block', rpcController.createBlock)
+app.get('/rpc/total', rpcController.getTotal)
+app.post('/rpc/pay', rpcController.pay)
 
 module.exports = app

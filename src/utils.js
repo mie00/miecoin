@@ -1,9 +1,9 @@
 var crypto = require('crypto')
-module.exports.sign = function (buffer, privateKey) {
-  return crypto.createSign('ecdsa-with-SHA1').update(buffer).sign(privateKey, 'base64')
+module.exports.sign = function (data, privateKey) {
+  return crypto.createSign('ecdsa-with-SHA1').update(data).sign(privateKey, 'base64')
 }
-module.exports.verify = function (buffer, publicKey, signature) {
-  return crypto.createVerify('ecdsa-with-SHA1').update(buffer).verify(publicKey, Buffer.from(signature, 'base64'))
+module.exports.verify = function (data, publicKey, signature) {
+  return crypto.createVerify('ecdsa-with-SHA1').update(data).verify(publicKey, Buffer.from(signature, 'base64'))
 }
 module.exports.hashBuffer = function hashBuffer (input) {
   return crypto.createHash('sha256').update(input).digest()
