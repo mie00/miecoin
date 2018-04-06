@@ -12,4 +12,5 @@ config.get('peers').forEach((p) => app.services.network.addPeer(p, function (err
 }))
 
 app.services.recurring.setRecheckNetworkInterval(5000)
+app.services.recurring.setCreateBlockInterval(10000)
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))

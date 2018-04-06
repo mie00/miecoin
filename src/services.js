@@ -1,5 +1,3 @@
-var config = require('config')
-
 var Chain = require('./chain')
 var Block = require('./block')
 var Transaction = require('./transaction')

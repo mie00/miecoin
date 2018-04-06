@@ -23,6 +23,8 @@ var services = new Services(models)
 app.services = services
 
 services.wallet.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
+services.pool.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
+services.pool.setMiningReward(config.get('mining.reward'))
 
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)
@@ -45,7 +47,6 @@ connection.connect(function (err) {
     }
   })
 })
-
 
 app.get('/api/hi', apiController.hi)
 app.get('/api/public_key', apiController.publicKey)

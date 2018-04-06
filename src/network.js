@@ -26,7 +26,6 @@ class Network {
         return cb(null, {'available': _.keys(this.peers).length, 'unavailable': this.unavailable.length})
       })
     })
-
   }
   recheckAvailable (cb) {
     var peers = _.keys(this.peers)

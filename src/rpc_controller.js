@@ -7,6 +7,9 @@ module.exports = function (services) {
   module.pay = (req, res) => {
     newLock.writeLock(function (release) {
       return services.block.getBlockHeight((err, height) => {
+        if (err) {
+          return res.send(500).end()
+        }
         return services.wallet.pay([], {'amount': req.body.amount, 'public_key': req.body.to}, config.get('fee'), height, (err) => {
           release()
           if (err) {

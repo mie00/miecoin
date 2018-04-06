@@ -108,7 +108,7 @@ module.exports.parallelAgg = function (functions, cb) {
   var count = functions.length
   var errs = []
   var ress = []
-  var callback = function(index) {
+  var callback = function (index) {
     return function (err, res) {
       errs[index] = err
       ress[index] = res
