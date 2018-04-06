@@ -4,6 +4,16 @@ module.exports =
       this.services = services
       this.models = models
       this.transactions = {}
+      this.privateKey = null
+      this.publicKey = null
+      this.miningReward = null
+    }
+    setKeyPair (privateKey, publicKey) {
+      this.privateKey = privateKey
+      this.publicKey = publicKey
+    }
+    setMiningReward (miningReward) {
+      this.miningReward = miningReward
     }
     add (transaction, cb) {
       return this.verifyTransaction(transaction, function (err, res) {
@@ -25,10 +35,10 @@ module.exports =
         }
       })
     }
-    flush (miningReward, privateKey, publicKey, data, cb) {
+    flush (data, cb) {
       var self = this
       var createdAt = new Date().getTime()
-      return self.services.block.generate_block(self.getFromPool(), miningReward, privateKey, publicKey, data, createdAt, function (err, block) {
+      return self.services.block.generate_block(self.getFromPool(), this.miningReward, this.privateKey, this.publicKey, data, createdAt, function (err, block) {
         if (err) {
           return cb(err)
         } else {

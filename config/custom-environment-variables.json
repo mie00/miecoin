@@ -1,0 +1,37 @@
+{
+    "api": {
+        "port": "API_PORT"
+    },
+    "mysql": {
+        "host": "MYSQL_HOST",
+        "port": "MYSQL_PORT",
+        "username": "MYSQL_USERNAME",
+        "password": "MYSQL_PASSWORD",
+        "database": "MYSQL_DATABASE",
+        "test_database": "MYSQL_TEST_DATABASE"
+    },
+    "authority": {
+        "public_keys": {
+            "__name": "AUTHORITY_PUBLIC_KEYS",
+            "__format": "json"
+        }
+    },
+    "genesis": {
+        "created_at": "GENESIS_CREATED_AT"
+    },
+    "mining": {
+        "reward": "MINING_REWARD"
+    },
+    "rpc": {
+        "username": "RPC_USERNAME",
+        "password": "RPC_PASSWORD"
+    },
+    "wallet": {
+        "private_key": "WALLET_PRIVATE_KEY",
+        "public_key": "WALLET_PUBLIC_KEY"
+    },
+    "peers": {
+        "__name": "PEERS",
+        "__format": "json"
+    }
+}

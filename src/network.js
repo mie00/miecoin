@@ -2,6 +2,8 @@ var Peer = require('./peer')
 var utils = require('./utils')
 var exceptions = require('./exceptions')
 
+var _ = require('lodash')
+
 class Network {
   /**
  * @param {string} point host:port
@@ -9,12 +11,46 @@ class Network {
   constructor (services) {
     this.services = services
     this.peers = {}
+    this.unavailable = []
+  }
+
+  recheck (cb) {
+    return this.recheckUnavailable((err) => {
+      if (err) {
+        return cb(err)
+      }
+      return this.recheckAvailable((err) => {
+        if (err) {
+          return cb(err)
+        }
+        return cb(null, {'available': _.keys(this.peers).length, 'unavailable': this.unavailable.length})
+      })
+    })
+
+  }
+  recheckAvailable (cb) {
+    var peers = _.keys(this.peers)
+    return utils.parallelAgg(peers.map((p) => this.peers[p].hi.bind(this.peers[p])), (errs, ress) => {
+      var unavailable = peers.filter((x, i) => errs[i])
+      for (var u of unavailable) {
+        delete this.peers[u]
+        this.unavailable.push(u)
+      }
+      cb(null, ress.filter((x) => x).length)
+    })
+  }
+  recheckUnavailable (cb) {
+    return utils.parallelAgg(this.unavailable.map((u) => this.addPeer.bind(this, u)), (errs, ress) => {
+      this.unavailable = this.unavailable.filter((x, i) => errs[i])
+      cb(null, ress.filter((x) => x).length)
+    })
   }
 
   addPeer (point, cb) {
     var peer = new Peer(point)
     peer.publicKey((err, res) => {
       if (err) {
+        this.unavailable.push(point)
         return cb(err)
       }
       if (res === this.services.wallet.publicKey) {

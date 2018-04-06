@@ -20,14 +20,7 @@ var models = new Models(connection)
 
 var Services = require('./services')
 var services = new Services(models)
-
-config.get('peers').forEach((p) => services.network.addPeer(p, function (err, res) {
-  if (err) {
-    console.log(`Adding ${p} failed ${err}`)
-  } else {
-    console.log(`Addind ${p} succeeded`)
-  }
-}))
+app.services = services
 
 services.wallet.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
 

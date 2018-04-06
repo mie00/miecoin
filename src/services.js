@@ -6,6 +6,7 @@ var Transaction = require('./transaction')
 var Pool = require('./pool')
 var Wallet = require('./wallet')
 var Network = require('./network')
+var Recurring = require('./recurring')
 
 module.exports =
   class Servies {
@@ -23,5 +24,7 @@ module.exports =
       this.wallet = wallet
       var network = new Network(this, models)
       this.network = network
+      var recurring = new Recurring(this, models)
+      this.recurring = recurring
     }
 }

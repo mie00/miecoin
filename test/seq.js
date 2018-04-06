@@ -49,8 +49,10 @@ describe('cycle', function () {
     modelsStub.add_raw_data.returns('add rd')
     modelsStub.add_otx.returns('add otx')
     modelsStub.transaction.yields(null)
+    services.pool.setKeyPair(pr1, pu1)
+    services.pool.setMiningReward(100)
     it('should work with no transactions', function (done) {
-      services.pool.flush(100, pr1, pu1, ['somedata'], function (err, block) {
+      services.pool.flush(['somedata'], function (err, block) {
         should(err).equal(null)
         done()
       })
