@@ -7,6 +7,18 @@ var Peer = require('./peer')
 module.exports = function (services) {
   var module = {}
   module.hi = (req, res) => res.send('hey')
+  module.areYou = (req, res, next) => {
+    services.wallet.areYou(req.pu, req.challenge, (err, resp) => {
+      if (err) {
+        return next(err)
+      }
+      if (resp) {
+        return res.status(200).send(resp)
+      } else {
+        return res.status(400).end()
+      }
+    })
+  }
   var newTransactionLock = new ReadWriteLock()
   module.announceTransaction = (req, res) => {
     newTransactionLock.writeLock(function (release) {

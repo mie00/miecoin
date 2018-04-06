@@ -3,6 +3,13 @@ var utils = require('./utils')
 
 module.exports = function (services, models, privateKey, publicKey) {
   var module = {}
+  module.areYou = function (pu, challenge, cb) {
+    if (pu.indexOf(publicKey) !== -1) {
+      return cb(null, {'response': utils.sign(challenge, privateKey), 'public_key': publicKey})
+    } else {
+      return cb(null, null)
+    }
+  }
   module.get_unspent_money = function (cb) {
     return models.selectUTXOByPublicKey(publicKey, cb)
   }

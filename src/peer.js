@@ -1,6 +1,8 @@
 var config = require('config')
 var request = require('request')
 
+var utils = require('./utils')
+
 class Peer {
   /**
  * @param {string} point host:port
@@ -30,6 +32,27 @@ class Peer {
   hi (cb) {
     return request.get(`http://${this.point}/api/hi`, cb)
   }
+
+  /**
+   * Ask if he owns one of these public keys
+   *
+   * @param {Array.<string>} pu - The public keys
+   * @param {emptyCallback} cb - A callback to run after the request finishes
+   */
+  areYou (pu, cb) {
+    var challenge = String(Math.random())
+    return request.get(`http://${this.point}/api/areyou`, {qs: {pu: pu, challenge: challenge}}, function (err, response, body) {
+      if (err) {
+        return cb(err)
+      }
+      if (response.statusCode !== 200) {
+        return cb(null, null)
+      }
+      if (body && pu.indexOf(body.public_key) !== -1 && utils.verify(challenge, body.public_key, body.response)) {
+        return cb(null, body.public_key)
+      }
+    })
+  }
   /**
    * Announce transaction
    *
@@ -37,7 +60,7 @@ class Peer {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceTransaction (transaction, cb) {
-    return request.post(`http://${this.point}/api/transaction`, transaction, cb)
+    return request.post(`http://${this.point}/api/transaction`, {data: {transaction: transaction}}, cb)
   }
   /**
    * Announce block
@@ -46,7 +69,7 @@ class Peer {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceBlock (block, cb) {
-    return request.post(`http://${this.point}/api/block`, block, cb)
+    return request.post(`http://${this.point}/api/block`, {data: {block: block}}, cb)
   }
 
   /**
