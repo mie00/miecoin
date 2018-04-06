@@ -1,10 +1,11 @@
 var config = require('config')
 
-var Chain = require('../src/chain')
-var Block = require('../src/block')
-var Transaction = require('../src/transaction')
-var Pool = require('../src/pool')
-var Wallet = require('../src/wallet')
+var Chain = require('./chain')
+var Block = require('./block')
+var Transaction = require('./transaction')
+var Pool = require('./pool')
+var Wallet = require('./wallet')
+var Network = require('./network')
 
 module.exports =
   class Servies {
@@ -20,5 +21,7 @@ module.exports =
       this.pool = pool
       var wallet = Wallet(this, models, config.get('wallet.private_key'), config.get('wallet.public_key'))
       this.wallet = wallet
+      var network = new Network(this, models)
+      this.network = network
     }
 }

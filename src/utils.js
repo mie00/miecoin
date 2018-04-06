@@ -103,3 +103,20 @@ module.exports.serialReduce = function (functions, init, reduce, cb) {
   }
   return onFinish(null, init)
 }
+
+module.exports.parallelAgg = function (functions, cb) {
+  var count = functions.length
+  var errs = []
+  var ress = []
+  var callback = function(index) {
+    return function (err, res) {
+      errs[index] = err
+      ress[index] = res
+      count--
+      if (count === 0) {
+        return cb(errs, ress)
+      }
+    }
+  }
+  return functions.length ? functions.map((f, i) => f(callback(i))) : cb([], [])
+}

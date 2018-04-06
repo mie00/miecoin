@@ -21,6 +21,8 @@ var models = new Models(connection)
 var Services = require('./services')
 var services = new Services(models)
 
+config.get('peers').forEach((p) => services.network.addPeer(p))
+
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)
 

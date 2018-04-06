@@ -116,3 +116,10 @@ var ChainNotEmptyException = module.exports.ChainNotEmptyException = function Ch
   Error.captureStackTrace(this, ChainNotEmptyException)
 }
 ChainNotEmptyException.prototype = Object.create(Error.prototype)
+
+var MultipleExceptionsException = module.exports.MultipleExceptionsException = function MultipleExceptionsException (exceptions) {
+  this.exceptions = exceptions
+  this.name = 'MultipleExceptionsException'
+  Error.captureStackTrace(this, MultipleExceptionsException)
+}
+MultipleExceptionsException.prototype = Object.create(Error.prototype)

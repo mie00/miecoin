@@ -195,4 +195,39 @@ describe('utils', function () {
       })
     })
   })
+  describe('parallel agg', function () {
+    it('should work', function (done) {
+      var f1 = function (cb) {
+        cb(null, 3)
+      }
+      var f2 = function (cb) {
+        cb(null, 1)
+      }
+      utils.parallelAgg([f1, f2], function (err, result) {
+        should(err).match([null, null])
+        result.should.match([3, 1])
+        done()
+      })
+    })
+    it('should raise all the errors', function (done) {
+      var f1 = function (cb) {
+        cb(new Error('an error'))
+      }
+      var f2 = function (cb) {
+        cb(null, 1)
+      }
+      utils.parallelAgg([f1, f2], function (err, res) {
+        err.should.match([new Error('an error'), null])
+        res.should.match([undefined, 1])
+        done()
+      })
+    })
+    it('should work with no inputs', function (done) {
+      utils.parallelAgg([], function (err, res) {
+        should(err).match([])
+        res.should.match([])
+        done()
+      })
+    })
+  })
 })
