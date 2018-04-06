@@ -20,26 +20,11 @@ connection.connect(function (err) {
   }
 })
 
-var services = {}
 var Models = require('../src/models')
+var models = new Models(connection)
 
-var Chain = require('../src/chain')
-var Block = require('../src/block')
-var Transaction = require('../src/transaction')
-var Pool = require('../src/pool')
-var Wallet = require('../src/wallet')
-
-var models = Models(connection)
-var transaction = Transaction(services, models)
-services.transaction = transaction
-var block = Block(services, models)
-services.block = block
-var chain = Chain(services, models)
-services.chain = chain
-var pool = Pool(services, models)
-services.pool = pool
-var wallet = Wallet(services, models, config.get('wallet.private_key'), config.get('wallet.public_key'))
-services.wallet = wallet
+var Services = require('./services')
+var services = new Services(models)
 
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)

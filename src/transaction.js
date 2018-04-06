@@ -41,9 +41,14 @@ module.exports = function (services, models) {
       if (err) {
         return cb(err)
       } else {
-        var otx = self.generate_otx(res.change + miningReward, publicKey)
+        var spare = res.change + miningReward
         var rawData = data.map((d) => self.generate_raw_data(d))
-        var blockTransaction = {'block_transaction': true, 'components': rawData.concat([otx])}
+        var components = rawData
+        if (spare) {
+          var otx = self.generate_otx(spare, publicKey)
+          components.push(otx)
+        }
+        var blockTransaction = {'block_transaction': true, 'components': components}
         return cb(null, blockTransaction)
       }
     })
@@ -118,7 +123,7 @@ module.exports = function (services, models) {
     var functions = nonBlockTransactions.map((transaction) => self.verify.bind(self, transaction, blockHeight, failExtra))
     try {
       utils.serialReduce(functions, {change: 0, sources: {}}, (a, b) => {
-        for (var e of b.sources) {
+        for (var e in b.sources) {
           if (a.sources[e]) {
             throw new exceptions.DoubleSpendingException()
           } else {
@@ -221,6 +226,9 @@ module.exports = function (services, models) {
     var buffer = Buffer.alloc(8).fill(transaction.block_transaction ? 1 : 0)
     return Buffer.concat([buffer, this.components_to_buffer(transaction.components)])
   }
+  module.calculate_component_hash = function (component) {
+    return utils.hash(this.component_to_buffer(component))
+  }
   module.components_to_buffer = function (components) {
     return Buffer.concat(components.map((component) => this.component_to_buffer(component)))
   }
@@ -262,7 +270,7 @@ module.exports = function (services, models) {
     var cursor = 0
     utils.fill(buffer, otx.type, cursor, 16)
     cursor += 16
-    buffer.writeInt32BE(otx.amount, cursor)
+    buffer.writeIntBE(otx.amount, cursor, 6)
     cursor += 256
     utils.fill(buffer, otx.public_key, cursor, 1024)
     cursor += 1024

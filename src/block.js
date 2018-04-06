@@ -20,7 +20,7 @@ module.exports = function (services, models) {
   module.getLastBlock = function (cb) {
     models.getLastBlock(cb)
   }
-  module.getGensisBlock = function (cb) {
+  module.getGenesisBlock = function (cb) {
     models.getGenesisBlock(cb)
   }
   module.getAuthorizedKeys = function (cb) {
@@ -32,28 +32,39 @@ module.exports = function (services, models) {
       }
     })
   }
-  module.generate_block = function (transactions, miningReward, privateKey, publicKey, data, cb) {
+  module.generate_block = function (transactions, miningReward, privateKey, publicKey, data, createdAt, cb) {
     var self = this
-    self.getLastBlock(function (err, block) {
+    self.getLastBlock(function (err, oldBlock) {
       if (err) {
         return cb(err)
       } else {
-        return services.transaction.generate_block_transaction(transactions, block.height + 1, miningReward, publicKey, data, function (err, blockTransaction) {
+        if (!oldBlock) {
+          oldBlock = {
+            height: 0,
+            hash: '0000000000000000000000000000000000000000000000000000000000000000'
+          }
+        }
+        return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, function (err, blockTransaction) {
           if (err) {
             return cb(err)
           } else {
             transactions.push(blockTransaction)
             var merkleRoot = services.transaction.calculate_merkle_root(transactions)
             var block = {
-              'height': block.height + 1,
-              'parent_hash': block.hash,
-              'publicKey': publicKey,
+              'height': oldBlock.height + 1,
+              'parent_hash': oldBlock.hash,
               'merkle_root': merkleRoot,
-              'created_at': new Date().getTime(),
+              'created_at': createdAt,
               'transactions': transactions
             }
-            var signature = models.sign(block, privateKey)
-            block.signature = signature
+            if (publicKey && privateKey) {
+              block.public_key = publicKey
+              var signature = utils.sign(self.to_buffer(block), privateKey)
+              block.signature = signature
+            } else {
+              block.public_key = ''
+              block.signature = ''
+            }
             return cb(null, block)
           }
         })
@@ -79,19 +90,22 @@ module.exports = function (services, models) {
       })
     })
   }
+  module.calculate_hash = function (block) {
+    return utils.hash(this.to_buffer(block))
+  }
   module.to_buffer = function (block) {
-    var buffer = Buffer.alloc(4 + 256 + 1024 + 256 + 4)
+    var buffer = Buffer.alloc(6 + 256 + 1024 + 256 + 6)
     var cursor = 0
-    buffer.writeInt32BE(block.height, cursor)
-    cursor += 4
+    buffer.writeIntBE(block.height, cursor, 6)
+    cursor += 6
     utils.fill(buffer, block.parent_hash, cursor, 256)
     cursor += 256
     utils.fill(buffer, block.public_key, cursor, 1024)
     cursor += 1024
     utils.fill(buffer, block.merkle_root, cursor, 256)
     cursor += 256
-    buffer.writeInt32BE(block.created_at)
-    cursor += 4
+    buffer.writeIntBE(block.created_at, cursor, 6)
+    cursor += 6
     return buffer
   }
   module.verify_signature = function (block) {

@@ -77,7 +77,11 @@ module.exports.serialReduce = function (functions, init, reduce, cb) {
     if (err) {
       return cb(err)
     } else {
-      init = reduce(init, res)
+      if (first) {
+        first = false
+      } else {
+        init = reduce(init, res)
+      }
       return cb(null, init)
     }
   }

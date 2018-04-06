@@ -18,7 +18,7 @@ var connection = mysql.createConnection({
   password: config.get('mysql.password'),
   database: config.get('mysql.test_database')
 })
-var models = Models(connection)
+var models = new Models(connection)
 var transaction = Transaction(services, models)
 services.transaction = transaction
 var block = Block(services, models)

@@ -109,3 +109,10 @@ var NotEnoughMoneyToSpendException = module.exports.NotEnoughMoneyToSpendExcepti
   Error.captureStackTrace(this, NotEnoughMoneyToSpendException)
 }
 NotEnoughMoneyToSpendException.prototype = Object.create(Error.prototype)
+
+var ChainNotEmptyException = module.exports.ChainNotEmptyException = function ChainNotEmptyException (message) {
+  this.message = message
+  this.name = 'ChainNotEmptyException'
+  Error.captureStackTrace(this, ChainNotEmptyException)
+}
+ChainNotEmptyException.prototype = Object.create(Error.prototype)

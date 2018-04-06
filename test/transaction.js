@@ -414,7 +414,7 @@ describe('Transaction', function () {
       var buffer = transaction.otx_to_buffer(factory.otx)
       var type = Buffer.from(factory.otx.type)
       assert(type.compare(buffer, 0, type.length) === 0)
-      assert(buffer.readInt32BE(16) === factory.otx.amount)
+      assert(buffer.readIntBE(16, 6) === factory.otx.amount)
       var publicKey = Buffer.from(factory.otx.public_key)
       assert(publicKey.compare(buffer, 16 + 256, 16 + 256 + publicKey.length) === 0)
     })

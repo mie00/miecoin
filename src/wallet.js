@@ -26,7 +26,7 @@ module.exports = function (services, models, privateKey, publicKey) {
         if (total >= amount) {
           break
         }
-        res.append(u)
+        res.push(u)
         total += u.amount
       }
       if (total < amount) {
@@ -40,12 +40,18 @@ module.exports = function (services, models, privateKey, publicKey) {
     var amount = utils.sum(otx.map((o) => o.amount))
     this.get_utxo(amount + fee, function (err, utxo) {
       if (err) {
-        return err
+        return cb(err)
+      }
+      var total = utils.sum(utxo.map((o) => o.amount))
+      var change = total - amount - fee
+      var changeOtx = []
+      if (change) {
+        changeOtx.push({'amount': change, 'public_key': publicKey})
       }
       var itx = utxo.map((o) => {
         return {'source': o.hash, 'private_key': privateKey}
       })
-      services.transaction.generate_non_block_transaction(data, otx, itx, blockHeight, function (err, transaction) {
+      services.transaction.generate_non_block_transaction(data, otx.concat(changeOtx), itx, blockHeight, function (err, transaction) {
         if (err) {
           return cb(err)
         }

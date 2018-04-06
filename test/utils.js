@@ -187,5 +187,12 @@ describe('utils', function () {
         done()
       })
     })
+    it('should work with no inputs', function (done) {
+      utils.serialReduce([], 1, (x, y) => x * y, function (err, res) {
+        should(err).match(null)
+        res.should.equal(1)
+        done()
+      })
+    })
   })
 })

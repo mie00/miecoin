@@ -1,10 +1,11 @@
 var utils = require('./utils')
+var exceptions = require('./exceptions')
 
 module.exports = function (services, models) {
   var module = {}
   module.add = function (blocks) {
     var queries = [models.removeFrom(Math.min.apply(Math, blocks.map((block) => block.height)))]
-    return queries.concat(utils.flatMap(blocks, (block) => module.add))
+    return queries.concat(utils.flatMap(blocks, (block) => services.block.add(block)))
   }
   module.create = function (blocks, cb) {
     var queries = module.add(blocks)
@@ -20,6 +21,25 @@ module.exports = function (services, models) {
     } else {
       return models.getLastBlocks(limit, cb)
     }
+  }
+  module.createGenesisBlock = function (authors, createdAt, cb) {
+    var self = this
+    var data = [JSON.stringify({'authors': authors})]
+    return services.block.generate_block([], 0, '', '', data, createdAt, function (err, block) {
+      if (err) {
+        return cb(err)
+      } else if (block.height !== 1) {
+        return cb(new exceptions.ChainNotEmptyException())
+      } else {
+        return self.create([block], function (err) {
+          if (err) {
+            return cb(err)
+          } else {
+            return cb(null, block)
+          }
+        })
+      }
+    })
   }
   return module
 }
