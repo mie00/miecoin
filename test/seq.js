@@ -57,20 +57,13 @@ describe('cycle', function () {
     })
   })
   describe('wallet.getTotal', function () {
-    var config = require('config')
-    var stub
     var services
     var models = new Models()
     var modelsStub = sinon.stub(models)
     before(function () {
-      stub = sinon.stub(config, 'get')
-      stub.withArgs('wallet.private_key').returns(factory.pr1)
-      stub.withArgs('wallet.public_key').returns(factory.pu1)
       services = new Services(modelsStub)
+      services.wallet.setKeyPair(factory.pr1, factory.pu1)
       modelsStub.selectUTXOByPublicKey.yields(null, [factory.firstBlockTransactionUTXO])
-    })
-    after(function () {
-      stub.restore()
     })
     it('should work', function (done) {
       services.wallet.getTotal(function (err, total) {
@@ -82,21 +75,14 @@ describe('cycle', function () {
     })
   })
   describe('wallet.pay', function () {
-    var config = require('config')
-    var stub
     var services
     var models = new Models()
     var modelsStub = sinon.stub(models)
     before(function () {
-      stub = sinon.stub(config, 'get')
-      stub.withArgs('wallet.private_key').returns(factory.pr1)
-      stub.withArgs('wallet.public_key').returns(factory.pu1)
       services = new Services(modelsStub)
+      services.wallet.setKeyPair(factory.pr1, factory.pu1)
       modelsStub.selectUTXOByPublicKey.yields(null, [factory.firstBlockTransactionUTXO])
       modelsStub.selectUTXO.yields(null, [factory.firstBlockTransactionUTXO])
-    })
-    after(function () {
-      stub.restore()
     })
     it('should work', function (done) {
       services.wallet.pay([], [{'amount': 20, 'public_key': factory.pu2}], 10, 2, function (err, transaction) {

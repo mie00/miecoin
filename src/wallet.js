@@ -1,19 +1,31 @@
 var exceptions = require('./exceptions')
 var utils = require('./utils')
 
-module.exports = function (services, models, privateKey, publicKey) {
-  var module = {}
-  module.areYou = function (pu, challenge, cb) {
-    if (pu.indexOf(publicKey) !== -1) {
-      return cb(null, {'response': utils.sign(challenge, privateKey), 'public_key': publicKey})
+class Wallet {
+  constructor (services, models) {
+    this.services = services
+    this.models = models
+    this.privateKey = null
+    this.publicKey = null
+  }
+  setKeyPair (privateKey, publicKey) {
+    this.privateKey = privateKey
+    this.publicKey = publicKey
+  }
+  areYou (pu, challenge, cb) {
+    if (pu.indexOf(this.publicKey) !== -1) {
+      return cb(null, {'response': utils.sign(challenge, this.privateKey), 'public_key': this.publicKey})
     } else {
       return cb(null, null)
     }
   }
-  module.get_unspent_money = function (cb) {
-    return models.selectUTXOByPublicKey(publicKey, cb)
+  challenge (challenge, cb) {
+    return cb(null, {'response': utils.sign(challenge, this.privateKey), 'public_key': this.publicKey})
   }
-  module.getTotal = function (cb) {
+  get_unspent_money (cb) {
+    return this.models.selectUTXOByPublicKey(this.publicKey, cb)
+  }
+  getTotal (cb) {
     return this.get_unspent_money(function (err, unspent) {
       if (err) {
         return cb(err)
@@ -21,7 +33,7 @@ module.exports = function (services, models, privateKey, publicKey) {
       return cb(null, utils.sum(unspent.map((u) => u.amount)))
     })
   }
-  module.get_utxo = function (amount, cb) {
+  get_utxo (amount, cb) {
     return this.get_unspent_money(function (err, unspent) {
       if (err) {
         return cb(err)
@@ -43,7 +55,8 @@ module.exports = function (services, models, privateKey, publicKey) {
       }
     })
   }
-  module.pay = function (data, otx, fee, blockHeight, cb) {
+  pay (data, otx, fee, blockHeight, cb) {
+    var self = this
     var amount = utils.sum(otx.map((o) => o.amount))
     this.get_utxo(amount + fee, function (err, utxo) {
       if (err) {
@@ -53,12 +66,12 @@ module.exports = function (services, models, privateKey, publicKey) {
       var change = total - amount - fee
       var changeOtx = []
       if (change) {
-        changeOtx.push({'amount': change, 'public_key': publicKey})
+        changeOtx.push({'amount': change, 'public_key': self.publicKey})
       }
       var itx = utxo.map((o) => {
-        return {'source': o.hash, 'private_key': privateKey}
+        return {'source': o.hash, 'private_key': self.privateKey}
       })
-      services.transaction.generate_non_block_transaction(data, otx.concat(changeOtx), itx, blockHeight, function (err, transaction) {
+      self.services.transaction.generate_non_block_transaction(data, otx.concat(changeOtx), itx, blockHeight, function (err, transaction) {
         if (err) {
           return cb(err)
         }
@@ -66,5 +79,6 @@ module.exports = function (services, models, privateKey, publicKey) {
       })
     })
   }
-  return module
 }
+
+module.exports = Wallet

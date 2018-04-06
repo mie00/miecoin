@@ -123,3 +123,10 @@ var MultipleExceptionsException = module.exports.MultipleExceptionsException = f
   Error.captureStackTrace(this, MultipleExceptionsException)
 }
 MultipleExceptionsException.prototype = Object.create(Error.prototype)
+
+var MeException = module.exports.MeException = function MeException (message) {
+  this.message = message
+  this.name = 'MeException'
+  Error.captureStackTrace(this, MeException)
+}
+MeException.prototype = Object.create(Error.prototype)

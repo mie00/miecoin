@@ -34,6 +34,27 @@ class Peer {
   }
 
   /**
+   * Challenge peer
+   *
+   * @param {emptyCallback} cb - A callback to run after the request finishes
+   */
+  publicKey (cb) {
+    var challenge = String(Math.random())
+    return request.get(`http://${this.point}/api/public_key`, {qs: {challenge: challenge}}, function (err, response, text) {
+      if (err) {
+        return cb(err)
+      }
+      if (response.statusCode !== 200) {
+        return cb(null, null)
+      }
+      var body = JSON.parse(text)
+      if (body && utils.verify(challenge, body.public_key, body.response)) {
+        return cb(null, body.public_key)
+      }
+      return cb(null, null)
+    })
+  }
+  /**
    * Ask if he owns one of these public keys
    *
    * @param {Array.<string>} pu - The public keys
@@ -41,13 +62,14 @@ class Peer {
    */
   areYou (pu, cb) {
     var challenge = String(Math.random())
-    return request.get(`http://${this.point}/api/areyou`, {qs: {pu: pu, challenge: challenge}}, function (err, response, body) {
+    return request.get(`http://${this.point}/api/areyou`, {qs: {pu: pu, challenge: challenge}}, function (err, response, text) {
       if (err) {
         return cb(err)
       }
       if (response.statusCode !== 200) {
         return cb(null, null)
       }
+      var body = JSON.parse(text)
       if (body && pu.indexOf(body.public_key) !== -1 && utils.verify(challenge, body.public_key, body.response)) {
         return cb(null, body.public_key)
       }

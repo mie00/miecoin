@@ -21,7 +21,15 @@ var models = new Models(connection)
 var Services = require('./services')
 var services = new Services(models)
 
-config.get('peers').forEach((p) => services.network.addPeer(p))
+config.get('peers').forEach((p) => services.network.addPeer(p, function (err, res) {
+  if (err) {
+    console.log(`Adding ${p} failed ${err}`)
+  } else {
+    console.log(`Addind ${p} succeeded`)
+  }
+}))
+
+services.wallet.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
 
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)
@@ -47,6 +55,7 @@ connection.connect(function (err) {
 
 
 app.get('/api/hi', apiController.hi)
+app.get('/api/public_key', apiController.publicKey)
 app.get('/api/areyou', apiController.areYou)
 app.post('/api/transaction', apiController.announceTransaction)
 app.post('/api/block', apiController.announceBlock)

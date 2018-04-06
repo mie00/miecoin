@@ -6,12 +6,24 @@ class Network {
   /**
  * @param {string} point host:port
  */
-  constructor () {
+  constructor (services) {
+    this.services = services
     this.peers = {}
   }
 
-  addPeer (point) {
-    this.peers[point] = new Peer(point)
+  addPeer (point, cb) {
+    var peer = new Peer(point)
+    peer.publicKey((err, res) => {
+      if (err) {
+        return cb(err)
+      }
+      if (res === this.services.wallet.publicKey) {
+        return cb(new exceptions.MeException())
+      } else {
+        this.peers[point] = peer
+        return cb(null, peer)
+      }
+    })
   }
 
   /**

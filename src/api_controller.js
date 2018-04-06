@@ -22,6 +22,14 @@ module.exports = function (services) {
       }
     })
   }
+  module.publicKey = (req, res, next) => {
+    services.wallet.challenge(req.query.challenge, (err, resp) => {
+      if (err) {
+        return next(err)
+      }
+      return res.status(200).send(resp)
+    })
+  }
   var newTransactionLock = new ReadWriteLock()
   module.announceTransaction = (req, res) => {
     newTransactionLock.writeLock(function (release) {
