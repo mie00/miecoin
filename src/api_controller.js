@@ -1,5 +1,6 @@
 var config = require('config')
 var ReadWriteLock = require('rwlock')
+var _ = require('lodash')
 
 var exceptions = require('./exceptions')
 var Peer = require('./peer')
@@ -8,7 +9,9 @@ module.exports = function (services) {
   var module = {}
   module.hi = (req, res) => res.send('hey')
   module.areYou = (req, res, next) => {
-    services.wallet.areYou(req.pu, req.challenge, (err, resp) => {
+    var pu = _.isArray(req.query.pu) ? req.quer.pu : [req.query.pu]
+    pu = pu.map((x) => x.replace(/\\n/g, '\n'))
+    services.wallet.areYou(pu, req.query.challenge, (err, resp) => {
       if (err) {
         return next(err)
       }
@@ -79,8 +82,8 @@ module.exports = function (services) {
     })
   }
   module.listBlocks = (req, res) => {
-    return services.chain.getBlocks(req.query.from, req.query.limit, (err, blocks) => {
-      res.status(err ? 404 : 200).end({'blocks': blocks})
+    return services.chain.getBlocks(Number(req.query.from), Number(req.query.limit) || 1, (err, blocks) => {
+      res.status(err ? 404 : 200).send({'blocks': blocks})
     })
   }
   return module

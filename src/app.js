@@ -10,15 +10,10 @@ var connection = mysql.createConnection({
   port: config.get('mysql.port'),
   user: config.get('mysql.username'),
   password: config.get('mysql.password'),
-  database: config.get('mysql.database')
+  database: config.get('mysql.database'),
+  multipleStatements: true
 })
 app.connection = connection
-
-connection.connect(function (err) {
-  if (err) {
-    throw exceptions.NoDatabaseError()
-  }
-})
 
 var Models = require('../src/models')
 var models = new Models(connection)
@@ -29,7 +24,28 @@ var services = new Services(models)
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)
 
+connection.connect(function (err) {
+  if (err) {
+    throw exceptions.NoDatabaseError()
+  }
+  return services.block.getBlockHeight((err, res) => {
+    if (err) {
+      throw err
+    }
+    if (!res) {
+      return services.chain.createGenesisBlock(config.get('authority.public_keys'), config.get('genesis.created_at'), (err, res) => {
+        if (err) {
+          throw err
+        }
+        console.log('genesis block created successfully')
+      })
+    }
+  })
+})
+
+
 app.get('/api/hi', apiController.hi)
+app.get('/api/areyou', apiController.areYou)
 app.post('/api/transaction', apiController.announceTransaction)
 app.post('/api/block', apiController.announceBlock)
 app.get('/api/block', apiController.listBlocks)

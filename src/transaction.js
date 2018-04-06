@@ -1,34 +1,37 @@
 var exceptions = require('./exceptions')
 var utils = require('./utils')
 
+var _ = require('lodash')
+
 module.exports = function (services, models) {
   var module = {}
-  module.add_transactions = function (transactions) {
-    return utils.flatMap(transactions, (transaction) => this.add(transaction))
+  module.add_transactions = function (transactions, blockHash) {
+    return utils.flatMap(transactions, (transaction) => this.add(transaction, blockHash))
   }
-  module.add = function (transaction) {
-    return [models.add_transaction(transaction)].concat(this.add_components(transaction.components))
+  module.add = function (transaction, blockHash) {
+    return [models.add_transaction(_.merge({}, transaction, {'block_hash': blockHash}))]
+      .concat(this.add_components(transaction.components, transaction.hash))
   }
-  module.add_components = function (components) {
-    return components.map((component) => this.add_component(component))
+  module.add_components = function (components, transactionHash) {
+    return components.map((component) => this.add_component(component, transactionHash))
   }
-  module.add_component = function (component) {
+  module.add_component = function (component, transactionHash) {
     if (component.type === 'itx') {
-      return this.add_itx(component)
+      return this.add_itx(component, transactionHash)
     } else if (component.type === 'otx') {
-      return this.add_otx(component)
+      return this.add_otx(component, transactionHash)
     } else if (component.type === 'raw_data') {
-      return this.add_raw_data(component)
+      return this.add_raw_data(component, transactionHash)
     }
   }
-  module.add_itx = function (itx) {
-    return models.add_itx(itx)
+  module.add_itx = function (itx, transactionHash) {
+    return models.add_itx(_.merge({}, itx, {'tx_hash': transactionHash}))
   }
-  module.add_otx = function (otx) {
-    return models.add_otx(otx)
+  module.add_otx = function (otx, transactionHash) {
+    return models.add_otx(_.merge({}, otx, {'tx_hash': transactionHash}))
   }
-  module.add_raw_data = function (rawData) {
-    return models.add_raw_data(rawData)
+  module.add_raw_data = function (rawData, transactionHash) {
+    return models.add_raw_data(_.merge({}, rawData, {'tx_hash': transactionHash}))
   }
   module.calculate_merkle_root = function (transactions) {
     var hashes = transactions.map((transaction) => this.calculate_hash(transaction))
@@ -49,6 +52,7 @@ module.exports = function (services, models) {
           components.push(otx)
         }
         var blockTransaction = {'block_transaction': true, 'components': components}
+        blockTransaction.hash = self.calculate_hash(blockTransaction)
         return cb(null, blockTransaction)
       }
     })
@@ -67,13 +71,16 @@ module.exports = function (services, models) {
   module.create_non_block_transaction = function (data, otx, itx) {
     var nonItx = data.map((d) => this.generate_raw_data(d)).concat(otx.map((o) => this.generate_otx(o.amount, o.public_key)))
     var otxHash = utils.hash(this.components_to_buffer(nonItx))
-    return {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash)))}
+    var transaction = {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash)))}
+    transaction.hash = this.calculate_hash(transaction)
+    return transaction
   }
   module.generate_raw_data = function (data) {
     var rawData = {
       'type': 'raw_data',
       'data': data
     }
+    rawData.hash = this.calculate_component_hash(rawData)
     return rawData
   }
   module.generate_otx = function (amount, publicKey) {
@@ -82,6 +89,7 @@ module.exports = function (services, models) {
       'amount': amount,
       'public_key': publicKey
     }
+    otx.hash = this.calculate_component_hash(otx)
     return otx
   }
   module.generate_itx = function (source, privateKey, toHash) {
@@ -93,6 +101,7 @@ module.exports = function (services, models) {
     var buffer = this.plain_itx_to_buffer(itx)
     var signature = utils.sign(buffer, privateKey)
     itx.signature = signature
+    itx.hash = this.calculate_component_hash(itx)
     return itx
   }
   module.verify_merkle = function (block, miningReward, parentTransactions, cb) {

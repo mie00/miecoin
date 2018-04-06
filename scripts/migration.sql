@@ -5,8 +5,8 @@ CREATE TABLE IF NOT EXISTS block (
     public_key VARCHAR(1024) NOT NULL,
     signature VARCHAR(1024) NOT NULL,
     merkle_root VARCHAR(255) NOT NULL,
-    created_at INT NOT NULL,
-    received_at INT NOT NULL
+    created_at BIGINT NOT NULL,
+    received_at BIGINT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tx (

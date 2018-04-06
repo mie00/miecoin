@@ -1,3 +1,5 @@
+var _ = require('lodash')
+
 module.exports =
   class Models {
     /**
@@ -7,6 +9,11 @@ module.exports =
      */
     constructor (connection) {
       this.connection = connection
+      this.blockProperties = ['height', 'parent_hash', 'hash', 'public_key', 'signature', 'merkle_root', 'created_at', 'received_at']
+      this.transactionProperties = ['block_hash', 'hash', 'block_transaction']
+      this.itxProperties = ['tx_hash', 'hash', 'source', 'sign']
+      this.otxProperties = ['tx_hash', 'hash', 'amount', 'public_key']
+      this.rawDataProperties = ['tx_hash', 'hash', 'data']
     }
     selectUTXO (hashes, blockHeight, cb) {
       return this.connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
@@ -30,7 +37,7 @@ module.exports =
           return cb(err, results)
         })
     }
-    getBlocksHeight (cb) {
+    getChainHeight (cb) {
       this.connection.query('SELECT MAX(height) AS m FROM block',
         function (err, results, fields) {
           if (err) {
@@ -61,13 +68,41 @@ module.exports =
         })
     }
     getBlocks (from, limit, cb) {
-      return this.connection.query('SELECT * FROM block WHERE HEIGHT <= ? ORDER BY height DESC LIMIT ?', [from, limit],
+      return this.connection.query('SELECT * FROM block WHERE height <= ? ORDER BY height DESC LIMIT ?', [from, limit],
         function (err, results, fields) {
           if (err) {
             return cb(err)
           } else {
             return cb(null, results)
           }
+        })
+    }
+    getWholeBlocks (from, limit, cb) {
+      var heightMax = from ? 'WHERE height <= ?' : ''
+      var params = from ? [from, limit] : [limit]
+      return this.connection.query({'sql': `SELECT * FROM block JOIN tx ON (block.hash = tx.block_hash)
+      LEFT OUTER JOIN itx ON (tx.hash = itx.tx_hash)
+      LEFT OUTER JOIN otx ON (tx.hash = otx.tx_hash)
+      LEFT OUTER JOIN raw_data ON (tx.hash = raw_data.tx_hash)
+      ${heightMax} ORDER BY height DESC LIMIT ?`,
+        nestTables: true}, params,
+        function (err, results, fields) {
+          if (err) {
+            return cb(err)
+          }
+          var blocks = _.values(_.groupBy(results, (r) => r.block.hash))
+          var ret = blocks.map((b) => {
+            var block = b[0].block
+            var transactions = _.values(_.groupBy(b, (r) => r.tx.hash))
+            block.transactions = transactions.map((t) => {
+              var transaction = t[0].tx
+              var components = _.flatMap(t, (s) => [s.itx, s.otx, s.raw_data]).filter((v) => v.hash)
+              transaction.components = components
+              return transaction
+            })
+            return block
+          })
+          return cb(null, ret)
         })
     }
     getFirstRawData (cb) {
@@ -95,35 +130,43 @@ module.exports =
       // It works because of on delete cascade
       return this.connection.format('DELETE FROM block WHERE height = ?', height)
     }
+    insert_obj (table, obj) {
+      // var keys = Object.keys(obj)
+      // var values = keys.map((k) => obj[k])
+      // var x = this.connection.format('INSERT INTO ' + table + ' (' + keys.join(', ') + ') VALUES (?)', [values])
+      return this.connection.format('INSERT INTO ' + table + ' SET ?', obj)
+    }
     add_block (block) {
-      return this.connection.format('INSERT INTO block SET ?', block)
+      return this.insert_obj('block', _.pick(block, this.blockProperties))
     }
     add_transaction (transaction) {
-      return this.connection.format('INSERT INTO tx SET ?', transaction)
+      return this.insert_obj('tx', _.pick(transaction, this.transactionProperties))
     }
     add_itx (itx) {
-      return this.connection.format('INSERT INTO itx SET ?', itx)
+      return this.insert_obj('itx', _.pick(itx, this.transactionProperties))
     }
     add_otx (otx) {
-      return this.connection.format('INSERT INTO otx SET ?', otx)
+      return this.insert_obj('otx', _.pick(otx, this.otxProperties))
     }
     add_raw_data (rawData) {
-      return this.connection.format('INSERT INTO raw_data SET ?', rawData)
+      return this.insert_obj('raw_data', _.pick(rawData, this.rawDataProperties))
     }
     transaction (queries, cb) {
-      return this.connection.beginTransaction(function (err) {
+      var self = this
+      return self.connection.beginTransaction(function (err) {
         if (err) {
           return cb(err)
         }
-        return this.connection.query(queries.join('; '), function (err) {
+        var q = queries.join('; ')
+        return self.connection.query(q, function (err) {
           if (err) {
-            return this.connection.rollback(function () {
+            return self.connection.rollback(function () {
               return cb(err)
             })
           }
-          return this.connection.commit(function (err) {
+          return self.connection.commit(function (err) {
             if (err) {
-              return this.connection.rollback(function () {
+              return self.connection.rollback(function () {
                 return cb(err)
               })
             } else {

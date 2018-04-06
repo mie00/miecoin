@@ -7,7 +7,7 @@ module.exports = function (services, models) {
     var queries = [models.add_block(utils.gather(block,
       ['height', 'parent_hash', 'hash', 'public_key',
         'signature', 'merkle_root', 'created_at', 'received_at']))]
-    queries = queries.concat(services.transaction.add_transactions(block.transactions))
+    queries = queries.concat(services.transaction.add_transactions(block.transactions, block.hash))
     return queries
   }
   module.sign = function (block, privateKey) {
@@ -15,7 +15,7 @@ module.exports = function (services, models) {
     return utils.sign(buffer, privateKey)
   }
   module.getBlockHeight = function (cb) {
-    models.getBlockHeight(cb)
+    models.getChainHeight(cb)
   }
   module.getLastBlock = function (cb) {
     models.getLastBlock(cb)
@@ -55,6 +55,7 @@ module.exports = function (services, models) {
               'parent_hash': oldBlock.hash,
               'merkle_root': merkleRoot,
               'created_at': createdAt,
+              'received_at': createdAt,
               'transactions': transactions
             }
             if (publicKey && privateKey) {
@@ -65,6 +66,7 @@ module.exports = function (services, models) {
               block.public_key = ''
               block.signature = ''
             }
+            block.hash = self.calculate_hash(block)
             return cb(null, block)
           }
         })

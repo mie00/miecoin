@@ -16,11 +16,7 @@ module.exports = function (services, models) {
   }
   module.getBlocks = function (from, limit, cb) {
     limit = limit || 1
-    if (from) {
-      return models.getBlocks(from, limit, cb)
-    } else {
-      return models.getLastBlocks(limit, cb)
-    }
+    return models.getWholeBlocks(from, limit, cb)
   }
   module.createGenesisBlock = function (authors, createdAt, cb) {
     var self = this
