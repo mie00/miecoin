@@ -44,20 +44,23 @@ module.exports.rawData = {
 module.exports.otx = {
   'type': 'otx',
   'amount': 1001,
-  'public_key': pu1
+  'public_key': pu1,
+  'created_at': 1522727362019
 }
 
 module.exports.otx2 = {
   'type': 'otx',
   'amount': 1002,
-  'public_key': pu1
+  'public_key': pu1,
+  'created_at': 1522727362019
 }
 
 module.exports.itx = {
   'type': 'itx',
   'source': 'some source',
   'to_hash': 'this is the otx that it will go into',
-  'signature': 'somesignature'
+  'signature': 'somesignature',
+  'created_at': 1522727362019
 }
 
 module.exports.genesisBlock = {
@@ -72,7 +75,8 @@ module.exports.genesisBlock = {
       'components': [
         {
           'type': 'raw_data',
-          'data': '{"authors":["-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEEZXNF7z15pdIoftuSaOYGe5Q\ndp/xkEBYjQy1WF0EdI6CoURWDZ1/BmIqPK22Qh8arEquIjFXjYfDUYCCQY3bTlHj\nNGJOYCwXRKs5HGBfzQdSHGz5TyrYZR7TRNIczvfOA6JL9M8I+4Sm7b66Nx0j4aty\nx/rT92VI5NbhpOFx5Iw=\n-----END PUBLIC KEY-----","-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEkYhFC5U8GMQZbsDyDMn4G6O8\nmOKj3pXn89U8BrA/48vR9Fc1VzLjnWVbVq+KKINoJjB3/2GolLvQjuZCR/NMIEDH\n906+w3RTE1oHfN9sbmBLD431a06CBlI1EQwgfge32asOX3JF+jnlAqsj1ZIslSPN\n/yxLP76iL1BU6lvMQ/A=\n-----END PUBLIC KEY-----"]}'
+          'data': '{"authors":["-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEEZXNF7z15pdIoftuSaOYGe5Q\ndp/xkEBYjQy1WF0EdI6CoURWDZ1/BmIqPK22Qh8arEquIjFXjYfDUYCCQY3bTlHj\nNGJOYCwXRKs5HGBfzQdSHGz5TyrYZR7TRNIczvfOA6JL9M8I+4Sm7b66Nx0j4aty\nx/rT92VI5NbhpOFx5Iw=\n-----END PUBLIC KEY-----","-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEkYhFC5U8GMQZbsDyDMn4G6O8\nmOKj3pXn89U8BrA/48vR9Fc1VzLjnWVbVq+KKINoJjB3/2GolLvQjuZCR/NMIEDH\n906+w3RTE1oHfN9sbmBLD431a06CBlI1EQwgfge32asOX3JF+jnlAqsj1ZIslSPN\n/yxLP76iL1BU6lvMQ/A=\n-----END PUBLIC KEY-----"]}',
+          'created_at': 1522727362019
         }
       ]
     }
@@ -84,14 +88,16 @@ module.exports.firstBlockTransactionUTXO = {
   'type': 'otx',
   'amount': 100,
   'public_key': '-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEEZXNF7z15pdIoftuSaOYGe5Q\ndp/xkEBYjQy1WF0EdI6CoURWDZ1/BmIqPK22Qh8arEquIjFXjYfDUYCCQY3bTlHj\nNGJOYCwXRKs5HGBfzQdSHGz5TyrYZR7TRNIczvfOA6JL9M8I+4Sm7b66Nx0j4aty\nx/rT92VI5NbhpOFx5Iw=\n-----END PUBLIC KEY-----',
-  'hash': '939c655e0e91ad0cef6890aa7ccb80af82d97ca069249ec4a06e0bb59d74d76c'
+  'hash': '939c655e0e91ad0cef6890aa7ccb80af82d97ca069249ec4a06e0bb59d74d76c',
+  'created_at': 1522727362019
 }
 module.exports.firstBlockTransaction = {
   'block_transaction': true,
   'components': [
     {
       'type': 'raw_data',
-      'data': 'somedata'
+      'data': 'somedata',
+      'created_at': 1522727362019
     }, module.exports.firstBlockTransactionUTXO
   ]
 }
@@ -111,7 +117,8 @@ module.exports.firstBlock = {
 module.exports.unknownComponent = {
   'type': 'somthing',
   'source': 'some source',
-  'to_hash': 'this is the otx that it will go into'
+  'to_hash': 'this is the otx that it will go into',
+  'created_at': 1522727362019
 }
 module.exports.invalidToHashTransaction = {
   'block_ransaction': false,
@@ -127,12 +134,14 @@ module.exports.sources = [
       'type': 'itx',
       'source': 'some source',
       'to_hash': 'this is the otx that it will go into',
-      'signature': 'somesignature'
+      'signature': 'somesignature',
+      'created_at': 1522727362019
     },
     'source': {
       'amount': 1002,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   },
   {
@@ -140,12 +149,14 @@ module.exports.sources = [
       'type': 'itx',
       'source': 'some source123',
       'to_hash': 'this is the otx that it will go into',
-      'signature': 'somesignature'
+      'signature': 'somesignature',
+      'created_at': 1522727362019
     },
     'source': {
       'amount': 1002,
       'public_key': pu1,
-      'hash': 'some source123'
+      'hash': 'some source123',
+      'created_at': 1522727362019
     }
   }
 ]
@@ -155,12 +166,14 @@ module.exports.unmatchingSources = [
       'type': 'itx',
       'source': 'some source',
       'to_hash': 'this is the otx that it will go into',
-      'signature': 'somesignature'
+      'signature': 'somesignature',
+      'created_at': 1522727362019
     },
     'source': {
       'amount': 1002,
       'public_key': pu1,
-      'hash': 'some source2'
+      'hash': 'some source2',
+      'created_at': 1522727362019
     }
   },
   {
@@ -168,12 +181,14 @@ module.exports.unmatchingSources = [
       'type': 'itx',
       'source': 'some source123',
       'to_hash': 'this is the otx that it will go into',
-      'signature': 'somesignature'
+      'signature': 'somesignature',
+      'created_at': 1522727362019
     },
     'source': {
       'amount': 1002,
       'public_key': pu1,
-      'hash': 'some source123'
+      'hash': 'some source123',
+      'created_at': 1522727362019
     }
   }
 ]
@@ -184,19 +199,22 @@ module.exports.otxItxSources = {
       'type': 'otx',
       'amount': 500,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 400,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 100,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   ],
   'itxSources': [
@@ -209,7 +227,8 @@ module.exports.otxItxSources = {
         'type': 'otx',
         'amount': 700,
         'public_key': pu1,
-        'hash': 'some source'
+        'hash': 'some source',
+      'created_at': 1522727362019
       }
     },
     {
@@ -221,7 +240,8 @@ module.exports.otxItxSources = {
         'type': 'otx',
         'amount': 1002,
         'public_key': pu1,
-        'hash': 'some source123'
+        'hash': 'some source123',
+        'created_at': 1522727362019
       }
     }
   ]
@@ -232,19 +252,22 @@ module.exports.otxItxSourcesNoEnough = {
       'type': 'otx',
       'amount': 500,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 400,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 803,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   ],
   'itxSources': [
@@ -252,12 +275,14 @@ module.exports.otxItxSourcesNoEnough = {
       'type': 'itx',
       'source': 'some source',
       'to_hash': 'this is the otx that it will go into',
+      'created_at': 1522727362019,
       'signature': '',
       'otx': {
         'type': 'otx',
         'amount': 700,
         'public_key': pu1,
-        'hash': 'some source'
+        'hash': 'some source',
+        'created_at': 1522727362019
       }
     },
     {
@@ -265,11 +290,13 @@ module.exports.otxItxSourcesNoEnough = {
       'source': 'some source123',
       'to_hash': 'this is the otx that it will go into',
       'signature': '',
+      'created_at': 1522727362019,
       'otx': {
         'type': 'otx',
         'amount': 1002,
         'public_key': pu1,
-        'hash': 'some source123'
+        'hash': 'some source123',
+        'created_at': 1522727362019
       }
     }
   ]
@@ -280,19 +307,22 @@ module.exports.otxItxSourcesBarelyEnough = {
       'type': 'otx',
       'amount': 500,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 400,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 802,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   ],
   'itxSources': [
@@ -301,11 +331,13 @@ module.exports.otxItxSourcesBarelyEnough = {
       'source': 'some source',
       'to_hash': 'this is the otx that it will go into',
       'signature': '',
+      'created_at': 1522727362019,
       'otx': {
         'type': 'otx',
         'amount': 700,
         'public_key': pu1,
-        'hash': 'some source'
+        'hash': 'some source',
+        'created_at': 1522727362019
       }
     },
     {
@@ -313,11 +345,13 @@ module.exports.otxItxSourcesBarelyEnough = {
       'source': 'some source123',
       'to_hash': 'this is the otx that it will go into',
       'signature': '',
+      'created_at': 1522727362019,
       'otx': {
         'type': 'otx',
         'amount': 1002,
         'public_key': pu1,
-        'hash': 'some source123'
+        'hash': 'some source123',
+        'created_at': 1522727362019
       }
     }
   ]
@@ -331,43 +365,50 @@ module.exports.transaction = {
       'type': 'otx',
       'amount': 500,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'itx',
       'source': 'some source',
       'to_hash': 'this is the otx that it will go into',
       'signature': '',
+      'created_at': 1522727362019,
       'otx': {
         'type': 'otx',
         'amount': 700,
         'public_key': pu1,
-        'hash': 'some source'
+        'hash': 'some source',
+        'created_at': 1522727362019
       }
     },
     {
       'type': 'otx',
       'amount': 400,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'itx',
       'source': 'some source123',
       'to_hash': 'this is the otx that it will go into',
       'signature': '',
+      'created_at': 1522727362019,
       'otx': {
         'type': 'otx',
         'amount': 1002,
         'public_key': pu1,
-        'hash': 'some source123'
+        'hash': 'some source123',
+        'created_at': 1522727362019
       }
     },
     {
       'type': 'otx',
       'amount': 100,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   ]
 }
@@ -379,13 +420,15 @@ module.exports.blockTransaction = {
       'type': 'otx',
       'amount': 500,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     },
     {
       'type': 'otx',
       'amount': 100,
       'public_key': pu1,
-      'hash': 'some source'
+      'hash': 'some source',
+      'created_at': 1522727362019
     }
   ]
 }

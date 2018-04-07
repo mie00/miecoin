@@ -66,7 +66,7 @@ class Wallet {
       var change = total - amount - fee
       var changeOtx = []
       if (change) {
-        changeOtx.push({'amount': change, 'public_key': self.publicKey})
+        changeOtx.push({'amount': change, 'public_key': self.publicKey, 'created_at': Date.now()})
       }
       var itx = utxo.map((o) => {
         return {'source': o.hash, 'private_key': self.privateKey}

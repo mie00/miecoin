@@ -20,7 +20,7 @@ module.exports = function (services, models) {
   }
   module.createGenesisBlock = function (authors, createdAt, cb) {
     var self = this
-    var data = [JSON.stringify({'authors': authors})]
+    var data = [{'data': JSON.stringify({'authors': authors}), 'created_at': createdAt}]
     return services.block.generate_block([], 0, '', '', data, createdAt, function (err, block) {
       if (err) {
         return cb(err)

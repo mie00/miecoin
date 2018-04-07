@@ -38,17 +38,17 @@ module.exports = function (services, models) {
     var merkleRoot = utils.calculate_merkle(hashes)
     return merkleRoot
   }
-  module.generate_block_transaction = function (nonBlockTransactions, blockHeight, miningReward, publicKey, data, cb) {
+  module.generate_block_transaction = function (nonBlockTransactions, blockHeight, miningReward, publicKey, data, createdAt, cb) {
     var self = this
     return self.verify_non_block_transactions(nonBlockTransactions, {}, blockHeight, function (err, res) {
       if (err) {
         return cb(err)
       } else {
         var spare = res.change + miningReward
-        var rawData = data.map((d) => self.generate_raw_data(d))
+        var rawData = data.map((d) => self.generate_raw_data(d.data, d.created_at))
         var components = rawData
         if (spare) {
-          var otx = self.generate_otx(spare, publicKey)
+          var otx = self.generate_otx(spare, publicKey, createdAt)
           components.push(otx)
         }
         var blockTransaction = {'block_transaction': true, 'components': components}
@@ -69,34 +69,37 @@ module.exports = function (services, models) {
     })
   }
   module.create_non_block_transaction = function (data, otx, itx) {
-    var nonItx = data.map((d) => this.generate_raw_data(d)).concat(otx.map((o) => this.generate_otx(o.amount, o.public_key)))
+    var nonItx = data.map((d) => this.generate_raw_data(d.data, d.created_at)).concat(otx.map((o) => this.generate_otx(o.amount, o.public_key, o.created_at)))
     var otxHash = utils.hash(this.components_to_buffer(nonItx))
-    var transaction = {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash)))}
+    var transaction = {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash, i.created_at)))}
     transaction.hash = this.calculate_hash(transaction)
     return transaction
   }
-  module.generate_raw_data = function (data) {
+  module.generate_raw_data = function (data, createdAt) {
     var rawData = {
       'type': 'raw_data',
-      'data': data
+      'data': data,
+      'created_at': createdAt
     }
     rawData.hash = this.calculate_component_hash(rawData)
     return rawData
   }
-  module.generate_otx = function (amount, publicKey) {
+  module.generate_otx = function (amount, publicKey, createdAt) {
     var otx = {
       'type': 'otx',
       'amount': amount,
-      'public_key': publicKey
+      'public_key': publicKey,
+      'created_at': createdAt
     }
     otx.hash = this.calculate_component_hash(otx)
     return otx
   }
-  module.generate_itx = function (source, privateKey, toHash) {
+  module.generate_itx = function (source, privateKey, toHash, createdAt) {
     var itx = {
       'type': 'itx',
       'source': source,
-      'to_hash': toHash
+      'to_hash': toHash,
+      'created_at': createdAt
     }
     var buffer = this.plain_itx_to_buffer(itx)
     var signature = utils.sign(buffer, privateKey)
@@ -253,7 +256,7 @@ module.exports = function (services, models) {
     }
   }
   module.plain_itx_to_buffer = function (itx) {
-    var buffer = Buffer.alloc(16 + 256 + 1024)
+    var buffer = Buffer.alloc(16 + 256 + 1024 + 6)
     var cursor = 0
     utils.fill(buffer, itx.type, cursor, 16)
     cursor += 16
@@ -261,10 +264,12 @@ module.exports = function (services, models) {
     cursor += 256
     utils.fill(buffer, itx.to_hash, cursor, 256)
     cursor += 1024
+    buffer.writeIntBE(itx.created_at, cursor, 6)
+    cursor += 6
     return buffer
   }
   module.itx_to_buffer = function (itx) {
-    var buffer = Buffer.alloc(16 + 256 + 1024)
+    var buffer = Buffer.alloc(16 + 256 + 1024 + 6)
     var cursor = 0
     utils.fill(buffer, itx.type, cursor, 16)
     cursor += 16
@@ -272,10 +277,12 @@ module.exports = function (services, models) {
     cursor += 256
     utils.fill(buffer, itx.signature, cursor, 256)
     cursor += 1024
+    buffer.writeIntBE(itx.created_at, cursor, 6)
+    cursor += 6
     return buffer
   }
   module.otx_to_buffer = function (otx) {
-    var buffer = Buffer.alloc(16 + 256 + 1024)
+    var buffer = Buffer.alloc(16 + 256 + 1024 + 6)
     var cursor = 0
     utils.fill(buffer, otx.type, cursor, 16)
     cursor += 16
@@ -283,16 +290,20 @@ module.exports = function (services, models) {
     cursor += 256
     utils.fill(buffer, otx.public_key, cursor, 1024)
     cursor += 1024
+    buffer.writeIntBE(otx.created_at, cursor, 6)
+    cursor += 6
     return buffer
   }
   module.raw_data_to_buffer = function (rawData) {
-    var buffer = Buffer.alloc(16 + 256 + 1024)
+    var buffer = Buffer.alloc(16 + 256 + 1024 + 6)
     var cursor = 0
     utils.fill(buffer, rawData.type, cursor, 16)
     cursor += 16
     cursor += 256
     utils.fill(buffer, rawData.data, cursor, 1024)
     cursor += 1024
+    buffer.writeIntBE(rawData.created_at, cursor, 6)
+    cursor += 6
     return buffer
   }
   return module

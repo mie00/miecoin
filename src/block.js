@@ -44,7 +44,7 @@ module.exports = function (services, models) {
             hash: '0000000000000000000000000000000000000000000000000000000000000000'
           }
         }
-        return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, function (err, blockTransaction) {
+        return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, createdAt, function (err, blockTransaction) {
           if (err) {
             return cb(err)
           } else {

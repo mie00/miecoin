@@ -11,9 +11,9 @@ module.exports =
       this.connection = connection
       this.blockProperties = ['height', 'parent_hash', 'hash', 'public_key', 'signature', 'merkle_root', 'created_at', 'received_at']
       this.transactionProperties = ['block_hash', 'hash', 'block_transaction']
-      this.itxProperties = ['tx_hash', 'hash', 'source', 'sign']
-      this.otxProperties = ['tx_hash', 'hash', 'amount', 'public_key']
-      this.rawDataProperties = ['tx_hash', 'hash', 'data']
+      this.itxProperties = ['tx_hash', 'hash', 'source', 'sign', 'created_at']
+      this.otxProperties = ['tx_hash', 'hash', 'amount', 'public_key', 'created_at']
+      this.rawDataProperties = ['tx_hash', 'hash', 'data', 'created_at']
     }
     selectUTXO (hashes, blockHeight, cb) {
       return this.connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
