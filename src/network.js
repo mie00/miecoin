@@ -97,7 +97,10 @@ class Network {
       if (onlyErrs.length) {
         return cb(new exceptions.MultipleExceptionsException(onlyErrs))
       }
-      return cb(null, ress.filter((x) => x).length)
+      return cb(null, {
+        'rejected': ress.filter((x) => x !== 200).length,
+        'accepted': ress.filter((x) => x === 200).length
+      })
     })
   }
   /**

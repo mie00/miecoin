@@ -44,7 +44,7 @@ module.exports = function (services) {
   var newTransactionLock = new ReadWriteLock()
   module.announceTransaction = (req, res) => {
     newTransactionLock.writeLock(function (release) {
-      services.pool.add(req.body.transaction, function (err, res) {
+      services.pool.add(req.body.transaction, function (err) {
         release()
         if (err) {
           return res.status(404).end()

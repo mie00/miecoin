@@ -62,6 +62,16 @@ module.exports =
         }
       })
     }
+    announceTransaction(transaction) {
+      console.log(`announcing transaction with hash ${transaction.hash}`)
+      this.services.network.announceTransaction(transaction, (err, res) => {
+        if (err) {
+          return console.log(`error announcing transaction ${err}`)
+        }
+        var {accepted, rejected} = res
+        return console.log(`transaction announced accepted: ${accepted}, rejected: ${rejected}`)
+      })
+    }
     emptyData() {
       while (this.data.length) {
         this.data.pop()
@@ -81,6 +91,7 @@ module.exports =
     addToPool(transaction) {
       var hash = this.services.transaction.calculate_hash(transaction)
       this.transactions[hash] = transaction
+      this.announceTransaction(transaction)
     }
     getFromPool() {
       return Object.keys(this.transactions).map((k) => this.transactions[k])
