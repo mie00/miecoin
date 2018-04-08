@@ -38,7 +38,7 @@ class Network {
   }
   recheckAvailable(cb) {
     var peers = _.keys(this.peers)
-    return utils.parallelAgg(peers.map((p) => this.peers[p].hi.bind(this.peers[p])), (errs, ress) => {
+    return utils.parallelAgg(peers.map((p) => this.peers[p].hi.bind(this.peers[p], this.self)), (errs, ress) => {
       var unavailable = peers.filter((x, i) => errs[i])
       for (var u of unavailable) {
         delete this.peers[u]
@@ -55,6 +55,20 @@ class Network {
   }
 
   addPeer(point, cb) {
+    if (point === this.self) {
+      return cb(new exceptions.MeException())
+    } else if (this.peers[point]) {
+      return cb(null, this.peers[this.addPeer])
+    } else {
+      var ind = this.unavailable.indexOf(point)
+      if (ind != -1) {
+        this.unavailable.pop(ind)
+      }
+      return this.addNewPeer(point, cb)
+    }
+  }
+
+  addNewPeer(point, cb) {
     var peer = new Peer(point, this)
     peer.publicKey((err, res) => {
       if (err) {
@@ -98,7 +112,10 @@ class Network {
       if (onlyErrs.length) {
         return cb(new exceptions.MultipleExceptionsException(onlyErrs))
       }
-      return cb(null, ress.filter((x) => x).length)
+      return cb(null, {
+        'rejected': ress.filter((x) => x !== 200).length,
+        'accepted': ress.filter((x) => x === 200).length
+      })
     })
   }
 }

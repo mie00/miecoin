@@ -6,7 +6,19 @@ var Peer = require('./peer')
 
 module.exports = function (services) {
   var module = {}
-  module.hi = (req, res) => res.send('hey')
+  module.hi = (req, res) => {
+    var peer = req.query.self
+    if (peer && !services.network.peers[peer]) {
+      services.network.addPeer(peer, (err) => {
+        if (err) {
+          console.log(`peer ${peer} cannot be added`)
+        } else {
+          console.log(`peer ${peer} added successfully`)
+        }
+      })
+    }
+    res.send('hey')
+  }
   module.areYou = (req, res, next) => {
     var pu = _.isArray(req.query.pu) ? req.quer.pu : [req.query.pu]
     pu = pu.map((x) => x.replace(/\\n/g, '\n'))

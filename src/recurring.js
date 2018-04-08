@@ -37,11 +37,12 @@ class Recurring {
       }
       console.log(`block created height: ${block.height}, hash: ${block.hash}`)
       console.log(`announcing block`)
-      this.services.network.announceBlock(block, (err, n) => {
+      this.services.network.announceBlock(block, (err, res) => {
         if (err) {
           return console.log('error announcing block')
         }
-        return console.log(`block announced to ${n} nodes`)
+        var {accepted, rejected} = res
+        return console.log(`block announced accepted: ${accepted}, rejected: ${rejected}`)
       })
     })
   }

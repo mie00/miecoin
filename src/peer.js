@@ -29,10 +29,11 @@ class Peer {
   /**
    * Say hi to the other node
    *
+   * @param {string} self - Self
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
-  hi (cb) {
-    return request.get(`http://${this.point}/api/hi`, cb)
+  hi (self, cb) {
+    return request.get(`http://${this.point}/api/hi`, {qs: {self: self}}, cb)
   }
 
   /**
@@ -93,7 +94,13 @@ class Peer {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceBlock (block, cb) {
-    return request.post(`http://${this.point}/api/block`, {body: {block: block, self: this.network.self}, json: true}, cb)
+    var options = {body: {block: block, self: this.network.self}, json: true}
+    return request.post(`http://${this.point}/api/block`, options, (err, res, body) => {
+      if (err) {
+        return cb(err)
+      }
+      return cb(null, res.statusCode)
+    })
   }
 
   /**
