@@ -10,19 +10,12 @@ module.exports =
   class Servies {
     constructor (models) {
       this.models = models
-      var transaction = Transaction(this, models)
-      this.transaction = transaction
-      var block = Block(this, models)
-      this.block = block
-      var chain = Chain(this, models)
-      this.chain = chain
-      var pool = new Pool(this, models)
-      this.pool = pool
-      var wallet = new Wallet(this, models)
-      this.wallet = wallet
-      var network = new Network(this, models)
-      this.network = network
-      var recurring = new Recurring(this, models)
-      this.recurring = recurring
+      this.transaction = new Transaction(this, models)
+      this.block = new Block(this, models)
+      this.chain = new Chain(this, models)
+      this.pool = new Pool(this, models)
+      this.wallet = new Wallet(this, models)
+      this.network = new Network(this, models)
+      this.recurring = new Recurring(this, models)
     }
 }

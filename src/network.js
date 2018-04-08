@@ -1,5 +1,3 @@
-var config = require('config')
-
 var Peer = require('./peer')
 var utils = require('./utils')
 var exceptions = require('./exceptions')
@@ -8,17 +6,21 @@ var _ = require('lodash')
 
 class Network {
   /**
- * @param {string} point host:port
- */
-  constructor (services) {
+   * @param {string} point host:port
+   */
+  constructor(services) {
     this.services = services
     this.self = null
     this.peers = {}
     this.unavailable = []
-    this.defaultPort = config.get('api.port')
+    this.defaultPort = null
   }
 
-  recheck (cb) {
+  setDefaultPort(port) {
+    this.defaultPort = port
+  }
+
+  recheck(cb) {
     return this.recheckUnavailable((err) => {
       if (err) {
         return cb(err)
@@ -27,11 +29,14 @@ class Network {
         if (err) {
           return cb(err)
         }
-        return cb(null, {'available': _.keys(this.peers).length, 'unavailable': this.unavailable.length})
+        return cb(null, {
+          'available': _.keys(this.peers).length,
+          'unavailable': this.unavailable.length
+        })
       })
     })
   }
-  recheckAvailable (cb) {
+  recheckAvailable(cb) {
     var peers = _.keys(this.peers)
     return utils.parallelAgg(peers.map((p) => this.peers[p].hi.bind(this.peers[p])), (errs, ress) => {
       var unavailable = peers.filter((x, i) => errs[i])
@@ -42,14 +47,14 @@ class Network {
       cb(null, ress.filter((x) => x).length)
     })
   }
-  recheckUnavailable (cb) {
+  recheckUnavailable(cb) {
     return utils.parallelAgg(this.unavailable.map((u) => this.addPeer.bind(this, u)), (errs, ress) => {
       this.unavailable = this.unavailable.filter((x, i) => errs[i])
       cb(null, ress.filter((x) => x).length)
     })
   }
 
-  addPeer (point, cb) {
+  addPeer(point, cb) {
     var peer = new Peer(point, this)
     peer.publicKey((err, res) => {
       if (err) {
@@ -72,7 +77,7 @@ class Network {
    * @param {Transaction} transaction - The transaction to announce
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
-  announceTransaction (transaction, cb) {
+  announceTransaction(transaction, cb) {
     return utils.parallelAgg(_.values(this.peers).map((peer) => peer.announceTransaction.bind(peer, transaction)), function (errs, ress) {
       var onlyErrs = errs.filter((x) => x)
       if (onlyErrs.length) {
@@ -87,7 +92,7 @@ class Network {
    * @param {Block} block - The block to announce
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
-  announceBlock (block, cb) {
+  announceBlock(block, cb) {
     return utils.parallelAgg(_.values(this.peers).map((peer) => peer.announceBlock.bind(peer, block)), function (errs, ress) {
       var onlyErrs = errs.filter((x) => x)
       if (onlyErrs.length) {

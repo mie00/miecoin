@@ -60,9 +60,9 @@ module.exports.serial = function (functions, cb) {
     onFinish = (function (t, v) {
       return function (err) {
         if (err) {
-          return v(err)
+          return process.nextTick(() => v(err))
         } else {
-          return t(v)
+          return process.nextTick(() => t(v))
         }
       }
     })(fun, onFinish)

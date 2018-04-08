@@ -1,4 +1,3 @@
-var config = require('config')
 var ReadWriteLock = require('rwlock')
 
 module.exports = function (services) {

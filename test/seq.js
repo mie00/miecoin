@@ -40,7 +40,7 @@ describe('cycle', function () {
     var models = new Models()
     var modelsStub = sinon.stub(models)
     var services = new Services(modelsStub)
-    modelsStub.getLastBlock.yields(null, undefined)
+    modelsStub.getGenesisBlock.yields(null, undefined)
     modelsStub.removeFrom.returns('removeFrom')
     modelsStub.add_block.returns('add bl')
     modelsStub.add_transaction.returns('add tr')

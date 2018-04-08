@@ -1,4 +1,3 @@
-var config = require('config')
 var ReadWriteLock = require('rwlock')
 var _ = require('lodash')
 
@@ -48,7 +47,7 @@ module.exports = function (services) {
       if (err) {
         return cb(err)
       } else {
-        services.chain.verify(blocks, keys, config.get('mining.reward'), function (err, min) {
+        services.chain.verify(blocks, keys, function (err, min) {
           if (err) {
             return cb(err)
           } else {
