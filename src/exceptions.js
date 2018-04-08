@@ -111,6 +111,13 @@ var NotEnoughMoneyToSpendException = module.exports.NotEnoughMoneyToSpendExcepti
 }
 NotEnoughMoneyToSpendException.prototype = Object.create(Error.prototype)
 
+var GenesisBlockExistsException = module.exports.GenesisBlockExistsException = function GenesisBlockExistsException (message) {
+  this.message = message
+  this.name = 'GenesisBlockExistsException'
+  Error.captureStackTrace(this, GenesisBlockExistsException)
+}
+GenesisBlockExistsException.prototype = Object.create(Error.prototype)
+
 var ChainNotEmptyException = module.exports.ChainNotEmptyException = function ChainNotEmptyException (message) {
   this.message = message
   this.name = 'ChainNotEmptyException'

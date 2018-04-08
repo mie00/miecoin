@@ -45,7 +45,7 @@ module.exports =
     flush (data, cb) {
       var self = this
       var createdAt = new Date().getTime()
-      return self.services.block.generate_block(self.getFromPool(), this.miningReward, this.privateKey, this.publicKey, data, createdAt, function (err, block) {
+      return self.services.block.generate_new_block(self.getFromPool(), this.miningReward, this.privateKey, this.publicKey, data, createdAt, function (err, block) {
         if (err) {
           return cb(err)
         } else {

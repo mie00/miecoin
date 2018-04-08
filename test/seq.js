@@ -15,7 +15,7 @@ var pu2 = factory.pu2
 
 var authors = [pu1, pu2]
 describe('cycle', function () {
-  describe('createGenesisBlock', function () {
+  describe('generateGenesisBlock', function () {
     var models = new Models()
     var modelsStub = sinon.stub(models)
     var services = new Services(modelsStub)
@@ -28,7 +28,28 @@ describe('cycle', function () {
     modelsStub.transaction.yields(null)
     it('should work', function (done) {
       var createdAt = 1522727362019
-      services.chain.createGenesisBlock(authors, createdAt, function (err, block) {
+      services.chain.generateGenesisBlock(authors, createdAt, function (err, block) {
+        should(err).equal(null)
+        block.height.should.equal(1)
+        block.created_at.should.equal(createdAt)
+        done()
+      })
+    })
+  })
+  describe('initGenesisBlock', function () {
+    var models = new Models()
+    var modelsStub = sinon.stub(models)
+    var services = new Services(modelsStub)
+    modelsStub.getLastBlock.yields(null, undefined)
+    modelsStub.removeFrom.returns('removeFrom')
+    modelsStub.add_block.returns('add bl')
+    modelsStub.add_transaction.returns('add tr')
+    modelsStub.add_raw_data.returns('add rd')
+    modelsStub.add_otx.returns('add otx')
+    modelsStub.transaction.yields(null)
+    it('should work', function (done) {
+      var createdAt = 1522727362019
+      services.chain.initGenesisBlock(authors, createdAt, function (err, block) {
         should(err).equal(null)
         modelsStub.transaction.calledOnce.should.be.true()
         modelsStub.transaction.getCall(0).args[0].should.match(['removeFrom', 'add bl', 'add tr', 'add rd'])

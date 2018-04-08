@@ -46,23 +46,41 @@ module.exports = function (services, models) {
     limit = limit || 1
     return models.getWholeBlocks(from, limit, cb)
   }
-  module.createGenesisBlock = function (authors, createdAt, cb) {
-    var self = this
-    var data = [{'data': JSON.stringify({'authors': authors}), 'created_at': createdAt}]
-    return services.block.generate_block([], 0, '', '', data, createdAt, function (err, block) {
+  module.generateGenesisBlock = function (authors, createdAt, cb) {
+    var data = [{
+      'data': JSON.stringify({
+        'authors': authors
+      }),
+      'created_at': createdAt
+    }]
+    var oldBlock = {
+      'height': 0
+    }
+    return services.block.generate_block(oldBlock, [], 0, '', '', data, createdAt, cb)
+  }
+  module.initGenesisBlock = function (authors, createdAt, cb) {
+    return services.block.getLastBlock((err, res) => {
       if (err) {
         return cb(err)
-      } else if (block.height !== 1) {
-        return cb(new exceptions.ChainNotEmptyException())
-      } else {
-        return self.create([block], function (err) {
-          if (err) {
-            return cb(err)
-          } else {
-            return cb(null, block)
-          }
-        })
       }
+      return services.chain.generateGenesisBlock(authors, createdAt, (err, block) => {
+        if (err) {
+          return cb(err)
+        }
+        if (!res) {
+          return this.create([block], (err) => {
+            if (err) {
+              return cb(err)
+            } else {
+              return cb(null, block)
+            }
+          })
+        } else if (res.hash === block.hash) {
+          return cb(new exceptions.GenesisBlockExistsException(`Genesis block exists with the same hash ${block.hash}`))
+        } else {
+          return cb(new exceptions.ChainNotEmptyException(`Genesis block exists with differnet hash config:chain ${block.hash}:${res.hash}`))
+        }
+      })
     })
   }
   return module

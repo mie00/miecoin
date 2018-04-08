@@ -32,25 +32,6 @@ services.pool.setMiningReward(config.get('mining.reward'))
 var apiController = require('./api_controller')(services)
 var rpcController = require('./rpc_controller')(services)
 
-connection.connect(function (err) {
-  if (err) {
-    throw exceptions.NoDatabaseError()
-  }
-  return services.block.getBlockHeight((err, res) => {
-    if (err) {
-      throw err
-    }
-    if (!res) {
-      return services.chain.createGenesisBlock(config.get('authority.public_keys'), config.get('genesis.created_at'), (err, res) => {
-        if (err) {
-          throw err
-        }
-        console.log('genesis block created successfully')
-      })
-    }
-  })
-})
-
 app.get('/api/hi', apiController.hi)
 app.get('/api/public_key', apiController.publicKey)
 app.get('/api/areyou', apiController.areYou)

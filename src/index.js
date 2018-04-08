@@ -22,6 +22,23 @@ config.get('peers').forEach((p) => app.services.network.addPeer(p, function (err
   }
 }))
 
-app.services.recurring.setRecheckNetworkInterval(7000)
-app.services.recurring.setCreateBlockInterval(10000)
-app.listen(port, host, () => console.log(`Example app listening on port ${port}!`))
+
+app.connection.connect(function (err) {
+  if (err) {
+    throw exceptions.NoDatabaseError()
+  }
+  var pu = config.get('authority.public_keys')
+  var createdAt = config.get('genesis.created_at')
+  return app.services.chain.initGenesisBlock(pu, createdAt, (err, block) => {
+    if (err instanceof exceptions.GenesisBlockExistsException) {
+      console.log(err.message)
+    } else if (err) {
+      throw err
+    } else {
+      console.log(`genesis block created successfully with hash ${block.hash}`)
+    }
+    app.services.recurring.setRecheckNetworkInterval(7000)
+    app.services.recurring.setCreateBlockInterval(10000)
+    app.listen(port, host, () => console.log(`Example app listening on port ${port}!`))
+  })
+})

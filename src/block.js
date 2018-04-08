@@ -4,9 +4,9 @@ var utils = require('./utils')
 module.exports = function (services, models) {
   var module = {}
   module.add = function (block) {
-    var queries = [models.add_block(utils.gather(block,
-      ['height', 'parent_hash', 'hash', 'public_key',
-        'signature', 'merkle_root', 'created_at', 'received_at']))]
+    var queries = [models.add_block(utils.gather(block, ['height', 'parent_hash', 'hash', 'public_key',
+      'signature', 'merkle_root', 'created_at', 'received_at'
+    ]))]
     queries = queries.concat(services.transaction.add_transactions(block.transactions, block.hash))
     return queries
   }
@@ -32,44 +32,45 @@ module.exports = function (services, models) {
       }
     })
   }
-  module.generate_block = function (transactions, miningReward, privateKey, publicKey, data, createdAt, cb) {
-    var self = this
-    self.getLastBlock(function (err, oldBlock) {
+  module.generate_block = function (oldBlock, transactions, miningReward, privateKey, publicKey, data, createdAt, cb) {
+    return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, createdAt, (err, blockTransaction) => {
       if (err) {
         return cb(err)
       } else {
-        if (!oldBlock) {
-          oldBlock = {
-            height: 0
-          }
+        transactions.push(blockTransaction)
+        var merkleRoot = services.transaction.calculate_merkle_root(transactions)
+        var block = {
+          'height': oldBlock.height + 1,
+          'parent_hash': oldBlock.hash,
+          'merkle_root': merkleRoot,
+          'created_at': createdAt,
+          'received_at': createdAt,
+          'transactions': transactions
         }
-        return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, createdAt, function (err, blockTransaction) {
-          if (err) {
-            return cb(err)
-          } else {
-            transactions.push(blockTransaction)
-            var merkleRoot = services.transaction.calculate_merkle_root(transactions)
-            var block = {
-              'height': oldBlock.height + 1,
-              'parent_hash': oldBlock.hash,
-              'merkle_root': merkleRoot,
-              'created_at': createdAt,
-              'received_at': createdAt,
-              'transactions': transactions
-            }
-            if (publicKey && privateKey) {
-              block.public_key = publicKey
-              var signature = utils.sign(self.to_buffer(block), privateKey)
-              block.signature = signature
-            } else {
-              block.public_key = ''
-              block.signature = ''
-            }
-            block.hash = self.calculate_hash(block)
-            return cb(null, block)
-          }
-        })
+        if (publicKey && privateKey) {
+          block.public_key = publicKey
+          var signature = utils.sign(this.to_buffer(block), privateKey)
+          block.signature = signature
+        } else {
+          block.public_key = ''
+          block.signature = ''
+        }
+        block.hash = this.calculate_hash(block)
+        return cb(null, block)
       }
+    })
+  }
+  module.generate_new_block = function (transactions, miningReward, privateKey, publicKey, data, createdAt, cb) {
+    this.getLastBlock((err, oldBlock) => {
+      if (err) {
+        return cb(err)
+      }
+      if (!oldBlock) {
+        oldBlock = {
+          height: 0
+        }
+      }
+      return this.generate_block(oldBlock, transactions, miningReward, privateKey, publicKey, data, createdAt, cb)
     })
   }
   module.verify = function (block, authors, miningReward, parentBlocks, parentTransactions, cb) {
