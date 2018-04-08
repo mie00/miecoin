@@ -7,8 +7,7 @@
         "port": "MYSQL_PORT",
         "username": "MYSQL_USERNAME",
         "password": "MYSQL_PASSWORD",
-        "database": "MYSQL_DATABASE",
-        "test_database": "MYSQL_TEST_DATABASE"
+        "database": "MYSQL_DATABASE"
     },
     "authority": {
         "public_keys": {

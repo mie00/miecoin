@@ -10,7 +10,7 @@ module.exports = function (services) {
         if (err) {
           return res.send(500).end()
         }
-        return services.wallet.pay([], {'amount': req.body.amount, 'public_key': req.body.to, 'created_at': Date.now()}, config.get('fee'), height, (err) => {
+        return services.wallet.pay([], {'amount': req.body.amount, 'public_key': req.body.to, 'created_at': Date.now()}, req.body.fee, height, (err) => {
           release()
           if (err) {
             return res.send(200).end()

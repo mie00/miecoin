@@ -1,4 +1,3 @@
-var config = require('config')
 var request = require('request')
 
 var exceptions = require('./exceptions')
@@ -17,7 +16,7 @@ class Peer {
     return this.point.split(':')[0]
   }
   get port () {
-    return this.point.split(':')[1] || config.get('api.port')
+    return this.point.split(':')[1] || network.defaultPort
   }
 
   /**

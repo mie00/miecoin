@@ -8,8 +8,7 @@
         "port": "3306",
         "username": "root",
         "password": "eim",
-        "database": "miecoin",
-        "test_database": "testmiecoin"
+        "database": "miecoin"
     },
     "authority": {
         "public_keys": ["-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEUbY0Kss56NVi3w0Db3soKlAa\nqkMam4loQvJ7y4G2HPLZqo8yCyhSDvmqmdI8fTuzTq3ySlwWcHrOkEWo1A4e0kBO\nDTaVmAassm+bXvI1YXXdKtLpfCmcby4Ib41dHH7aH9rDLvHshb7mVlBCK8QGjjtj\nXkxsqNnXFEBY6bDhx0U=\n-----END PUBLIC KEY-----", "-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEkYhFC5U8GMQZbsDyDMn4G6O8\nmOKj3pXn89U8BrA/48vR9Fc1VzLjnWVbVq+KKINoJjB3/2GolLvQjuZCR/NMIEDH\n906+w3RTE1oHfN9sbmBLD431a06CBlI1EQwgfge32asOX3JF+jnlAqsj1ZIslSPN\n/yxLP76iL1BU6lvMQ/A=\n-----END PUBLIC KEY-----"]

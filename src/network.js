@@ -1,3 +1,5 @@
+var config = require('config')
+
 var Peer = require('./peer')
 var utils = require('./utils')
 var exceptions = require('./exceptions')
@@ -13,6 +15,7 @@ class Network {
     this.self = null
     this.peers = {}
     this.unavailable = []
+    this.defaultPort = config.get('api.port')
   }
 
   recheck (cb) {
