@@ -31,11 +31,18 @@ class Recurring {
   }
   createBlock () {
     console.log('creating block')
-    this.services.pool.flush([], (err, res) => {
+    this.services.pool.flush([], (err, block) => {
       if (err) {
         return console.log(`an error happened while creating block ${err}`)
       }
-      return console.log(`block created`)
+      console.log(`block created height: ${block.height}, hash: ${block.hash}`)
+      console.log(`announcing block`)
+      this.services.network.announceBlock(block, (err, n) => {
+        if (err) {
+          return console.log('error announcing block')
+        }
+        return console.log(`block announced to ${n} nodes`)
+      })
     })
   }
 }

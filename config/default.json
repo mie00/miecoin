@@ -1,17 +1,18 @@
 {
     "api": {
+        "host": "127.0.0.1",
         "port": 3000
     },
     "mysql": {
-        "host": "172.17.0.2",
+        "host": "172.17.0.3",
         "port": "3306",
         "username": "root",
-        "password": "passwder",
+        "password": "eim",
         "database": "miecoin",
         "test_database": "testmiecoin"
     },
     "authority": {
-        "public_keys": ["-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEEZXNF7z15pdIoftuSaOYGe5Q\ndp/xkEBYjQy1WF0EdI6CoURWDZ1/BmIqPK22Qh8arEquIjFXjYfDUYCCQY3bTlHj\nNGJOYCwXRKs5HGBfzQdSHGz5TyrYZR7TRNIczvfOA6JL9M8I+4Sm7b66Nx0j4aty\nx/rT92VI5NbhpOFx5Iw=\n-----END PUBLIC KEY-----","-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEkYhFC5U8GMQZbsDyDMn4G6O8\nmOKj3pXn89U8BrA/48vR9Fc1VzLjnWVbVq+KKINoJjB3/2GolLvQjuZCR/NMIEDH\n906+w3RTE1oHfN9sbmBLD431a06CBlI1EQwgfge32asOX3JF+jnlAqsj1ZIslSPN\n/yxLP76iL1BU6lvMQ/A=\n-----END PUBLIC KEY-----"]
+        "public_keys": ["-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEUbY0Kss56NVi3w0Db3soKlAa\nqkMam4loQvJ7y4G2HPLZqo8yCyhSDvmqmdI8fTuzTq3ySlwWcHrOkEWo1A4e0kBO\nDTaVmAassm+bXvI1YXXdKtLpfCmcby4Ib41dHH7aH9rDLvHshb7mVlBCK8QGjjtj\nXkxsqNnXFEBY6bDhx0U=\n-----END PUBLIC KEY-----", "-----BEGIN PUBLIC KEY-----\nMIGbMBQGByqGSM49AgEGCSskAwMCCAEBDgOBggAEkYhFC5U8GMQZbsDyDMn4G6O8\nmOKj3pXn89U8BrA/48vR9Fc1VzLjnWVbVq+KKINoJjB3/2GolLvQjuZCR/NMIEDH\n906+w3RTE1oHfN9sbmBLD431a06CBlI1EQwgfge32asOX3JF+jnlAqsj1ZIslSPN\n/yxLP76iL1BU6lvMQ/A=\n-----END PUBLIC KEY-----"]
     },
     "genesis": {
         "created_at": 1523018000000

@@ -1,14 +1,17 @@
 var config = require('config')
 var request = require('request')
 
+var exceptions = require('./exceptions')
+
 var utils = require('./utils')
 
 class Peer {
   /**
  * @param {string} point host:port
  */
-  constructor (point) {
+  constructor (point, network) {
     this.point = point
+    this.network = network
   }
   get ip () {
     return this.point.split(':')[0]
@@ -82,7 +85,7 @@ class Peer {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceTransaction (transaction, cb) {
-    return request.post(`http://${this.point}/api/transaction`, {data: {transaction: transaction}}, cb)
+    return request.post(`http://${this.point}/api/transaction`, {body: {transaction: transaction}, json: true}, cb)
   }
   /**
    * Announce block
@@ -91,7 +94,7 @@ class Peer {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceBlock (block, cb) {
-    return request.post(`http://${this.point}/api/block`, {data: {block: block}}, cb)
+    return request.post(`http://${this.point}/api/block`, {body: {block: block, self: this.network.self}, json: true}, cb)
   }
 
   /**
@@ -110,7 +113,15 @@ class Peer {
    * @param {listBlocksCallback} cb - A callback to run after the request finishes
    */
   listBlocks (from, limit, cb) {
-    return request.get(`http://${this.point}/api/block`, {qs: {from: from, limit: limit}}, cb)
+    return request.get(`http://${this.point}/api/block`, {qs: {from: from, limit: limit}}, (err, res, body) => {
+      if (err) {
+        return cb(err)
+      }
+      if (res.statusCode < 200 || res.statusCode >= 300) {
+        return cb(new exceptions.HTTPException(res.statusCode, body))
+      }
+      return cb(null, JSON.parse(body).blocks)
+    })
   }
 }
 

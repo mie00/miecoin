@@ -32,7 +32,7 @@ module.exports =
         })
     }
     selectBlocksByHeight (heights, cb) {
-      return this.connection.query('SELECT height, hash FROM block WHERE height in ?', [heights],
+      return this.connection.query('SELECT height, hash FROM block WHERE height IN (?)', [heights],
         function (err, results, fields) {
           return cb(err, results)
         })
@@ -96,7 +96,12 @@ module.exports =
             var transactions = _.values(_.groupBy(b, (r) => r.tx.hash))
             block.transactions = transactions.map((t) => {
               var transaction = t[0].tx
-              var components = _.flatMap(t, (s) => [s.itx, s.otx, s.raw_data]).filter((v) => v.hash)
+              var components = _.flatMap(t, (s) => {
+                s.itx.type = 'itx'
+                s.otx.type = 'otx'
+                s.raw_data.type = 'raw_data'
+                return [s.itx, s.otx, s.raw_data]
+              }).filter((v) => v.hash)
               transaction.components = components
               return transaction
             })
@@ -107,7 +112,7 @@ module.exports =
     }
     getFirstRawData (cb) {
       return this.connection.query(`SELECT raw_data.data FROM raw_data JOIN tx ON (raw_data.tx_hash = tx.hash)
-    JOIN block ON (tx.block_hash = block.hash) WHERE block.height = 0`,
+    JOIN block ON (tx.block_hash = block.hash) WHERE block.height = 1`,
         function (err, results, fields) {
           if (err) {
             return cb(err)
@@ -128,7 +133,7 @@ module.exports =
     }
     removeFrom (height) {
       // It works because of on delete cascade
-      return this.connection.format('DELETE FROM block WHERE height = ?', height)
+      return this.connection.format('DELETE FROM block WHERE height >= ?', height)
     }
     insert_obj (table, obj) {
       // var keys = Object.keys(obj)

@@ -10,6 +10,7 @@ class Network {
  */
   constructor (services) {
     this.services = services
+    this.self = null
     this.peers = {}
     this.unavailable = []
   }
@@ -46,13 +47,14 @@ class Network {
   }
 
   addPeer (point, cb) {
-    var peer = new Peer(point)
+    var peer = new Peer(point, this)
     peer.publicKey((err, res) => {
       if (err) {
         this.unavailable.push(point)
         return cb(err)
       }
       if (res === this.services.wallet.publicKey) {
+        this.self = point
         return cb(new exceptions.MeException())
       } else {
         this.peers[point] = peer
@@ -68,12 +70,12 @@ class Network {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceTransaction (transaction, cb) {
-    return utils.parallerAgg(this.peers.map((peer) => peer.announceTransaction.bind(peer, transaction)), function (errs, ress) {
+    return utils.parallelAgg(_.values(this.peers).map((peer) => peer.announceTransaction.bind(peer, transaction)), function (errs, ress) {
       var onlyErrs = errs.filter((x) => x)
       if (onlyErrs.length) {
         return cb(new exceptions.MultipleExceptionsException(onlyErrs))
       }
-      return cb()
+      return cb(null, ress.filter((x) => x).length)
     })
   }
   /**
@@ -83,12 +85,12 @@ class Network {
    * @param {emptyCallback} cb - A callback to run after the request finishes
    */
   announceBlock (block, cb) {
-    return utils.parallerAgg(this.peers.map((peer) => peer.announceTransaction.bind(peer, block)), function (errs, ress) {
+    return utils.parallelAgg(_.values(this.peers).map((peer) => peer.announceBlock.bind(peer, block)), function (errs, ress) {
       var onlyErrs = errs.filter((x) => x)
       if (onlyErrs.length) {
         return cb(new exceptions.MultipleExceptionsException(onlyErrs))
       }
-      return cb()
+      return cb(null, ress.filter((x) => x).length)
     })
   }
 }

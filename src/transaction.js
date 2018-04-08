@@ -9,7 +9,9 @@ module.exports = function (services, models) {
     return utils.flatMap(transactions, (transaction) => this.add(transaction, blockHash))
   }
   module.add = function (transaction, blockHash) {
-    return [models.add_transaction(_.merge({}, transaction, {'block_hash': blockHash}))]
+    return [models.add_transaction(_.merge({}, transaction, {
+        'block_hash': blockHash
+      }))]
       .concat(this.add_components(transaction.components, transaction.hash))
   }
   module.add_components = function (components, transactionHash) {
@@ -25,13 +27,19 @@ module.exports = function (services, models) {
     }
   }
   module.add_itx = function (itx, transactionHash) {
-    return models.add_itx(_.merge({}, itx, {'tx_hash': transactionHash}))
+    return models.add_itx(_.merge({}, itx, {
+      'tx_hash': transactionHash
+    }))
   }
   module.add_otx = function (otx, transactionHash) {
-    return models.add_otx(_.merge({}, otx, {'tx_hash': transactionHash}))
+    return models.add_otx(_.merge({}, otx, {
+      'tx_hash': transactionHash
+    }))
   }
   module.add_raw_data = function (rawData, transactionHash) {
-    return models.add_raw_data(_.merge({}, rawData, {'tx_hash': transactionHash}))
+    return models.add_raw_data(_.merge({}, rawData, {
+      'tx_hash': transactionHash
+    }))
   }
   module.calculate_merkle_root = function (transactions) {
     var hashes = transactions.map((transaction) => this.calculate_hash(transaction))
@@ -51,7 +59,10 @@ module.exports = function (services, models) {
           var otx = self.generate_otx(spare, publicKey, createdAt)
           components.push(otx)
         }
-        var blockTransaction = {'block_transaction': true, 'components': components}
+        var blockTransaction = {
+          'block_transaction': true,
+          'components': components
+        }
         blockTransaction.hash = self.calculate_hash(blockTransaction)
         return cb(null, blockTransaction)
       }
@@ -71,7 +82,10 @@ module.exports = function (services, models) {
   module.create_non_block_transaction = function (data, otx, itx) {
     var nonItx = data.map((d) => this.generate_raw_data(d.data, d.created_at)).concat(otx.map((o) => this.generate_otx(o.amount, o.public_key, o.created_at)))
     var otxHash = utils.hash(this.components_to_buffer(nonItx))
-    var transaction = {'block_transaction': false, 'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash, i.created_at)))}
+    var transaction = {
+      'block_transaction': false,
+      'components': nonItx.concat(itx.map((i) => this.generate_itx(i.source, i.private_key, otxHash, i.created_at)))
+    }
     transaction.hash = this.calculate_hash(transaction)
     return transaction
   }
@@ -119,10 +133,11 @@ module.exports = function (services, models) {
         if (err) {
           return cb(err)
         }
-        var merkleRoot = self.calculate_merkle_root(block.add_transaction)
+        var merkleRoot = self.calculate_merkle_root(block.transactions)
         if (merkleRoot !== block.merkle_root) {
           return cb(new exceptions.InvalidMerklerRootException())
         }
+        return cb(null)
       })
     })
   }
@@ -134,7 +149,10 @@ module.exports = function (services, models) {
     var self = this
     var functions = nonBlockTransactions.map((transaction) => self.verify.bind(self, transaction, blockHeight, failExtra))
     try {
-      utils.serialReduce(functions, {change: 0, sources: {}}, (a, b) => {
+      utils.serialReduce(functions, {
+        change: 0,
+        sources: {}
+      }, (a, b) => {
         for (var e in b.sources) {
           if (a.sources[e]) {
             throw new exceptions.DoubleSpendingException()
@@ -182,7 +200,10 @@ module.exports = function (services, models) {
             if (err) {
               return cb(err)
             } else {
-              return cb(null, {'change': change, 'sources': itxSources.map((x) => x.otx.hash)})
+              return cb(null, {
+                'change': change,
+                'sources': itxSources.map((x) => x.otx.hash)
+              })
             }
           })
         })
@@ -218,18 +239,22 @@ module.exports = function (services, models) {
   }
   module.get_sources = function (itx, blockHeight, cb) {
     var sources = itx.map((i) => i.source)
-    return models.selectUTXO(sources, blockHeight,
-      function (err, results) {
-        if (err) {
-          return cb(err)
-        } else {
-          var sources = utils.mapBy(results, 'hash')
-          for (var i of itx) {
-            i.otx = sources[i.source]
+    if (sources.length) {
+      return models.selectUTXO(sources, blockHeight,
+        function (err, results) {
+          if (err) {
+            return cb(err)
+          } else {
+            var sources = utils.mapBy(results, 'hash')
+            for (var i of itx) {
+              i.otx = sources[i.source]
+            }
+            return cb(null, itx)
           }
-          return cb(null, itx)
-        }
-      })
+        })
+    } else {
+      return cb(null, itx)
+    }
   }
   module.calculate_hash = function (transaction) {
     return utils.hash(this.to_buffer(transaction))

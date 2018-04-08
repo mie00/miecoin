@@ -35,6 +35,13 @@ module.exports =
         }
       })
     }
+    shouldFlush (cb) {
+      if (_.keys(this.transactions).length >= 10) {
+        return cb(null, true)
+      } else {
+        return cb(null, false)
+      }
+    }
     flush (data, cb) {
       var self = this
       var createdAt = new Date().getTime()

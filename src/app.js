@@ -1,10 +1,13 @@
 var config = require('config')
 const express = require('express')
+const bodyParser = require('body-parser')
 var mysql = require('mysql')
 
 var exceptions = require('./exceptions')
 
 const app = express()
+app.use(bodyParser.json())
+
 var connection = mysql.createConnection({
   host: config.get('mysql.host'),
   port: config.get('mysql.port'),

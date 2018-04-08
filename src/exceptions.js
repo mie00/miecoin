@@ -26,8 +26,9 @@ var UnknownParentException = module.exports.UnknownParentException = function Un
 }
 UnknownParentException.prototype = Object.create(Error.prototype)
 
-var DuplicateBlockException = module.exports.DuplicateBlockException = function DuplicateBlockException (message) {
-  this.message = message
+var DuplicateBlockException = module.exports.DuplicateBlockException = function DuplicateBlockException (height, hash) {
+  this.height = height
+  this.hash = hash
   this.name = 'DuplicateBlockException'
   Error.captureStackTrace(this, DuplicateBlockException)
 }
@@ -89,8 +90,8 @@ var DoubleSpendingException = module.exports.DoubleSpendingException = function 
 }
 DoubleSpendingException.prototype = Object.create(Error.prototype)
 
-var SameHeightException = module.exports.SameHeightException = function SameHeightException (message) {
-  this.message = message
+var SameHeightException = module.exports.SameHeightException = function SameHeightException (height) {
+  this.height = height
   this.name = 'SameHeightException'
   Error.captureStackTrace(this, SameHeightException)
 }
@@ -130,3 +131,18 @@ var MeException = module.exports.MeException = function MeException (message) {
   Error.captureStackTrace(this, MeException)
 }
 MeException.prototype = Object.create(Error.prototype)
+
+var HTTPException = module.exports.HTTPException = function HTTPException (status, body) {
+  this.status = status
+  this.body = body
+  this.name = 'HTTPException'
+  Error.captureStackTrace(this, HTTPException)
+}
+HTTPException.prototype = Object.create(Error.prototype)
+
+var DifferenetChainException = module.exports.DifferenetChainException = function DifferenetChainException (message) {
+  this.message = message
+  this.name = 'DifferenetChainException'
+  Error.captureStackTrace(this, DifferenetChainException)
+}
+DifferenetChainException.prototype = Object.create(Error.prototype)

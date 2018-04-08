@@ -36,9 +36,9 @@ describe('Block', function () {
 
     describe('add', function () {
       it('should work', function () {
-        block.add(factory.blocks[0], function (err) {
-          assert(err === null)
-        })
+        var queries = block.add(factory.blocks[0])
+        queries.should.be.an.Array()
+        queries.length.should.be.above(0)
       })
     })
   })

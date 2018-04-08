@@ -48,11 +48,12 @@ module.exports = function (services) {
       if (err) {
         return cb(err)
       } else {
-        services.chain.verify(blocks, keys, config.get('mining.reward'), function (err) {
+        services.chain.verify(blocks, keys, config.get('mining.reward'), function (err, min) {
           if (err) {
             return cb(err)
           } else {
-            services.chain.add(blocks, function (err) {
+            var newBlocks = blocks.filter((block) => block.height >= min)
+            services.chain.create(newBlocks, function (err) {
               if (err) {
                 return cb(err)
               } else {
@@ -70,13 +71,21 @@ module.exports = function (services) {
       if (!err) {
         return cb(null)
       } else if (err instanceof exceptions.UnknownParentException) {
-        return peer.listBlocks(Math.min.apply(Math, blocks.map((block) => block.height)), blocks.length, function (err, res) {
-          if (err) {
-            return cb(err)
-          } else {
-            return processNewBlocks(res.concat(blocks), peer, cb)
-          }
-        })
+        if (Math.min.apply(Math, blocks.map((b) => b.height)) > 2) {
+          return peer.listBlocks(Math.min.apply(Math, blocks.map((block) => block.height)) - 1, blocks.length,
+            function (err, res) {
+              if (err) {
+                return cb(err)
+              } else {
+                var n = res.filter((block) => block.height > 1)
+                return processNewBlocks(blocks.concat(n), peer, cb)
+              }
+            })
+        } else {
+          return cb(new exceptions.DifferenetChainException())
+        }
+      } else {
+        return cb(err)
       }
     })
   }
@@ -84,14 +93,22 @@ module.exports = function (services) {
   var blockSyncLock = new ReadWriteLock()
   module.announceBlock = (req, res) => {
     blockSyncLock.writeLock(function (release) {
-      processNewBlocks(req.body, new Peer(req.ip), (err) => {
+      processNewBlocks([req.body.block], new Peer(req.body.self, services.network), (err) => {
+        if (err) {
+          console.log(`error block height: ${req.body.block.height} hash:${req.body.block.hash} ${err}`)
+        } else {
+          console.log(`got block height: ${req.body.block.height} hash:${req.body.block.hash}`)
+        }
         res.status(err ? 404 : 200).end()
+        release()
       })
     })
   }
   module.listBlocks = (req, res) => {
     return services.chain.getBlocks(Number(req.query.from), Number(req.query.limit) || 1, (err, blocks) => {
-      res.status(err ? 404 : 200).send({'blocks': blocks})
+      res.status(err ? 404 : 200).send({
+        'blocks': blocks
+      })
     })
   }
   return module
