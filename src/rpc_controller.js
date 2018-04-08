@@ -42,6 +42,14 @@ module.exports = function (services) {
       })
     })
   }
+  module.addData = (req, res) => {
+    var data = req.body.data
+    if (!data) {
+      return res.status(400).end()
+    }
+    services.pool.addToData({'data': data, 'created_at': req.body.created_at || Date.now()})
+    return res.status(204).end()
+  }
   module.createBlock = (req, res) => {
     newLock.writeLock(function (release) {
       release()

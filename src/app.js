@@ -49,6 +49,7 @@ class App {
     app.post('/rpc/block', rpcController.createBlock)
     app.get('/rpc/total', rpcController.getTotal)
     app.post('/rpc/pay', rpcController.pay)
+    app.post('/rpc/data', rpcController.addData)
 
   }
 }

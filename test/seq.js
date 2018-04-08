@@ -77,7 +77,7 @@ describe('cycle', function () {
     services.pool.setMiningReward(100)
     it('should work with no transactions', function (done) {
       var createdAt = 1522727362019
-      services.pool.flush([{'data': 'somedata', 'created_at': createdAt}], function (err, block) {
+      services.pool.flush(function (err, block) {
         should(err).equal(null)
         done()
       })

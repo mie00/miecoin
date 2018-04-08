@@ -1,21 +1,22 @@
 module.exports =
   class Pool {
-    constructor (services, models) {
+    constructor(services, models) {
       this.services = services
       this.models = models
       this.transactions = {}
+      this.data = []
       this.privateKey = null
       this.publicKey = null
       this.miningReward = null
     }
-    setKeyPair (privateKey, publicKey) {
+    setKeyPair(privateKey, publicKey) {
       this.privateKey = privateKey
       this.publicKey = publicKey
     }
-    setMiningReward (miningReward) {
+    setMiningReward(miningReward) {
       this.miningReward = miningReward
     }
-    add (transaction, cb) {
+    add(transaction, cb) {
       return this.verifyTransaction(transaction, (err, res) => {
         if (err) {
           return cb(err)
@@ -25,7 +26,7 @@ module.exports =
         }
       })
     }
-    verifyTransaction (transaction, cb) {
+    verifyTransaction(transaction, cb) {
       var self = this
       self.services.block.getBlockHeight(function (err, height) {
         if (err) {
@@ -35,17 +36,17 @@ module.exports =
         }
       })
     }
-    shouldFlush (cb) {
+    shouldFlush(cb) {
       if (_.keys(this.transactions).length >= 10) {
         return cb(null, true)
       } else {
         return cb(null, false)
       }
     }
-    flush (data, cb) {
+    flush(cb) {
       var self = this
       var createdAt = new Date().getTime()
-      return self.services.block.generate_new_block(self.getFromPool(), this.miningReward, this.privateKey, this.publicKey, data, createdAt, function (err, block) {
+      return self.services.block.generate_new_block(self.getFromPool(), this.miningReward, this.privateKey, this.publicKey, this.getData(), createdAt, function (err, block) {
         if (err) {
           return cb(err)
         } else {
@@ -54,25 +55,37 @@ module.exports =
               return cb(err)
             } else {
               self.emptyPool()
+              self.emptyData()
               cb(null, block)
             }
           })
         }
       })
     }
-    emptyPool () {
+    emptyData() {
+      while (this.data.length) {
+        this.data.pop()
+      }
+    }
+    getData() {
+      return this.data
+    }
+    addToData(data) {
+      this.data.push(data)
+    }
+    emptyPool() {
       Object.keys(this.transactions).forEach((x) => {
         delete this.transactions[x]
       })
     }
-    addToPool (transaction) {
+    addToPool(transaction) {
       var hash = this.services.transaction.calculate_hash(transaction)
       this.transactions[hash] = transaction
     }
-    getFromPool () {
+    getFromPool() {
       return Object.keys(this.transactions).map((k) => this.transactions[k])
     }
-    countPool () {
+    countPool() {
       return Object.keys(this.transactions).length
     }
-}
+  }

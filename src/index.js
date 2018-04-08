@@ -51,7 +51,9 @@ app.connection.connect(function (err) {
       console.log(`genesis block created successfully with hash ${block.hash}`)
     }
     app.services.recurring.setRecheckNetworkInterval(7000)
-    app.services.recurring.setCreateBlockInterval(10000)
+    if (pu.indexOf(publicKey) != -1) {
+      app.services.recurring.setCreateBlockInterval(10000)
+    }
     app.app.listen(port, host, () => {
       console.log(`MieCoin listening on port ${port}!`)
       app.services.network.addPeer(self, (err) => {

@@ -31,7 +31,7 @@ class Recurring {
   }
   createBlock () {
     console.log('creating block')
-    this.services.pool.flush([], (err, block) => {
+    this.services.pool.flush((err, block) => {
       if (err) {
         return console.log(`an error happened while creating block ${err}`)
       }
