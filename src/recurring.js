@@ -4,7 +4,17 @@ class Recurring {
     this.recheckNetworkInterval = null
     this.recheckNetworkTask = null
     this.createBlockInterval = null
+    this.createBlockMargin = null
     this.createBlockTask = null
+  }
+  calculateBlockTime() {
+    var t = this.createBlockInterval + (Math.random() - 0.5) * 2 * this.createBlockMargin
+    return t
+  }
+  refresh() {
+    if (this.createBlockInterval) {
+      return this.setCreateBlockInterval(this.createBlockInterval, this.createBlockMargin)
+    }
   }
   setRecheckNetworkInterval (time) {
     if (this.recheckNetworkTask) {
@@ -13,12 +23,13 @@ class Recurring {
     this.recheckNetworkInterval = time
     this.recheckNetworkTask = setInterval(this.recheckNetwork.bind(this), time)
   }
-  setCreateBlockInterval (time) {
+  setCreateBlockInterval (time, margin) {
     if (this.createBlockTask) {
       clearInterval(this.createBlockTask)
     }
     this.createBlockInterval = time
-    this.createBlockTask = setInterval(this.createBlock.bind(this), time)
+    this.createBlockMargin = margin
+    this.createBlockTask = setInterval(this.createBlock.bind(this), this.calculateBlockTime())
   }
   recheckNetwork () {
     console.log('rechecking network')

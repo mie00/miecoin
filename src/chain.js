@@ -19,7 +19,13 @@ class Chain {
   }
   create(blocks, cb) {
     var queries = this.add(blocks)
-    this.models.transaction(queries, cb)
+    this.models.transaction(queries, (err, res) => {
+      if (err) {
+        return cb(err)
+      }
+      this.services.recurring.refresh()
+      return cb(null, res)
+    })
   }
   verify(allBlocks, authors, cb) {
     var blocks = allBlocks

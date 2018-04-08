@@ -29,7 +29,7 @@ class Wallet {
     })
   }
   get_unspent_money(cb) {
-    return this.models.selectUTXOByPublicKey(this.publicKey, cb)
+    return this.services.pool.getUnspentMoney(this.publicKey, cb)
   }
   getTotal(cb) {
     return this.get_unspent_money(function (err, unspent) {

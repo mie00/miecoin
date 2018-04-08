@@ -11,7 +11,7 @@ class App {
     this.rpcParams = rpcParams
     const app = express()
     this.app = app
-    app.use(bodyParser.json())
+    app.use(bodyParser.json({'limit': 1024 * 1024}))
 
     var connection = mysql.createConnection(_.extend({}, connectionParams, {multipleStatements: true}))
     this.connection = connection

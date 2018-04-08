@@ -63,13 +63,27 @@ module.exports =
         }
       })
     }
+    getUnspentMoney(publicKey, cb) {
+      return this.models.selectUTXOByPublicKey(this.publicKey, (err, res) => {
+        if (err) {
+          return cb(err)
+        }
+        var transactions = this.getFromPool()
+        var components = _.flatMap(transactions, 'components')
+        var sources = components.map((x) => x.source).filter((x) => x)
+        return cb(null, res.filter((txo) => sources.indexOf(txo.hash) === -1))
+      })
+    }
     announceTransaction(transaction) {
       console.log(`announcing transaction with hash ${transaction.hash}`)
       this.services.network.announceTransaction(transaction, (err, res) => {
         if (err) {
           return console.log(`error announcing transaction ${err}`)
         }
-        var {accepted, rejected} = res
+        var {
+          accepted,
+          rejected
+        } = res
         return console.log(`transaction announced accepted: ${accepted}, rejected: ${rejected}`)
       })
     }
@@ -107,6 +121,9 @@ module.exports =
       var hash = this.services.transaction.calculate_hash(transaction)
       this.transactions[hash] = transaction
       this.announceTransaction(transaction)
+      if (this.countPool() >= 10) {
+        this.services.recurring.createBlock()
+      }
     }
     getFromPool() {
       return Object.keys(this.transactions).map((k) => this.transactions[k])

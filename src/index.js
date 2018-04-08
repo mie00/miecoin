@@ -50,9 +50,18 @@ app.connection.connect(function (err) {
     } else {
       console.log(`genesis block created successfully with hash ${block.hash}`)
     }
-    app.services.recurring.setRecheckNetworkInterval(7000)
+    app.services.recurring.setRecheckNetworkInterval(config.get('recurring.network'))
     if (pu.indexOf(publicKey) != -1) {
-      app.services.recurring.setCreateBlockInterval(10000)
+      var average = config.get('recurring.block.average')
+      var margin = config.get('recurring.block.margin')
+      /*
+      Because of the margin and that the nodes reset at the same time,
+      the real average will be less than the average per node.
+      A simple fix to this is to increase the node's average to fix the real average.
+      This formula was found thanks to Omar Elawadi.
+      */
+      average += margin * (1 - 1 / pu.length)
+      app.services.recurring.setCreateBlockInterval(average, margin)
     }
     app.app.listen(port, host, () => {
       console.log(`MieCoin listening on port ${port}!`)
