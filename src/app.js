@@ -32,6 +32,9 @@ class App {
     app.post('/api/transaction', apiController.announceTransaction)
     app.post('/api/block', apiController.announceBlock)
     app.get('/api/block', apiController.listBlocks)
+    app.get('/api/count', apiController.getBlockCount)
+    app.get('/api/block_by_hash', apiController.getBlockByHash)
+    app.get('/api/transaction_by_hash', apiController.getTransactionByHash)
 
     app.all('/rpc/.*', (req, res, next) => {
       var auth = req.headers['authorization']

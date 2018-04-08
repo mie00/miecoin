@@ -17,6 +17,9 @@ module.exports = function (services, models) {
   module.getBlockHeight = function (cb) {
     models.getChainHeight(cb)
   }
+  module.getBlockByHash = function (hash, cb) {
+    models.getBlockByHash(hash, cb)
+  }
   module.getLastBlock = function (cb) {
     models.getLastBlock(cb)
   }

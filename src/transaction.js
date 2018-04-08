@@ -41,6 +41,9 @@ module.exports = function (services, models) {
       'tx_hash': transactionHash
     }))
   }
+  module.getTransactionByHash = function (hash, cb) {
+    models.getTransactionByHash(hash, cb)
+  }
   module.calculate_merkle_root = function (transactions) {
     var hashes = transactions.map((transaction) => this.calculate_hash(transaction))
     var merkleRoot = utils.calculate_merkle(hashes)

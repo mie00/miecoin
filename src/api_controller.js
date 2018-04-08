@@ -122,5 +122,43 @@ module.exports = function (services) {
       })
     })
   }
+  module.getBlockCount = (req, res, next) => {
+    return services.block.getBlockHeight((err, height) => {
+      if (err) {
+        return next(err)
+      }
+      return res.status(200).send({
+        'count': height
+      })
+    })
+  }
+  module.getBlockByHash = (req, res, next) => {
+    return services.block.getBlockByHash(req.query.hash, (err, block) => {
+      if (err) {
+        return next(err)
+      }
+      if (block) {
+        return res.status(200).send({
+          'block': block
+        })
+      } else {
+        return res.status(404).send({})
+      }
+    })
+  }
+  module.getTransactionByHash = (req, res, next) => {
+    return services.transaction.getTransactionByHash(req.query.hash, (err, transaction) => {
+      if (err) {
+        return next(err)
+      }
+      if (transaction) {
+        return res.status(200).send({
+          'transaction': transaction
+        })
+      } else {
+        return res.status(404).send({})
+      }
+    })
+  }
   return module
 }
