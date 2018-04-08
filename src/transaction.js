@@ -46,40 +46,51 @@ module.exports = function (services, models) {
   }
   module.calculate_merkle_root = function (transactions) {
     var hashes = transactions.map((transaction) => this.calculate_hash(transaction))
+      .map((hash) => Buffer.from(hash, 'hex')).sort()
     var merkleRoot = utils.calculate_merkle(hashes)
-    return merkleRoot
+    return merkleRoot.toString('hex')
   }
-  module.generate_block_transaction = function (nonBlockTransactions, blockHeight, miningReward, publicKey, data, createdAt, cb) {
+  module.generate_block_transaction = function (nonBlockTransactions, miningReward, publicKey, data, createdAt, cb) {
     var self = this
-    return self.verify_non_block_transactions(nonBlockTransactions, {}, blockHeight, function (err, res) {
+    return models.getChainHeight((err, blockHeight) => {
       if (err) {
         return cb(err)
-      } else {
-        var spare = res.change + miningReward
-        var rawData = data.map((d) => self.generate_raw_data(d.data, d.created_at))
-        var components = rawData
-        if (spare) {
-          var otx = self.generate_otx(spare, publicKey, createdAt)
-          components.push(otx)
-        }
-        var blockTransaction = {
-          'block_transaction': true,
-          'components': components
-        }
-        blockTransaction.hash = self.calculate_hash(blockTransaction)
-        return cb(null, blockTransaction)
       }
+      return self.verify_non_block_transactions(nonBlockTransactions, [], blockHeight, function (err, res) {
+        if (err) {
+          return cb(err)
+        } else {
+          var spare = res.change + miningReward
+          var rawData = data.map((d) => self.generate_raw_data(d.data, d.created_at))
+          var components = rawData
+          if (spare) {
+            var otx = self.generate_otx(spare, publicKey, createdAt)
+            components.push(otx)
+          }
+          var blockTransaction = {
+            'block_transaction': true,
+            'components': components
+          }
+          blockTransaction.hash = self.calculate_hash(blockTransaction)
+          return cb(null, blockTransaction)
+        }
+      })
     })
   }
-  module.generate_non_block_transaction = function (data, otx, itx, blockHeight, cb) {
+  module.generate_non_block_transaction = function (data, otx, itx, cb) {
     var self = this
     var transaction = self.create_non_block_transaction(data, otx, itx)
-    return self.verify_non_block_transactions([transaction], {}, blockHeight, function (err, res) {
+    return models.getChainHeight((err, blockHeight) => {
       if (err) {
         return cb(err)
-      } else {
-        return cb(null, transaction)
       }
+      return self.verify_non_block_transactions([transaction], [], blockHeight, function (err, res) {
+        if (err) {
+          return cb(err)
+        } else {
+          return cb(null, transaction)
+        }
+      })
     })
   }
   module.create_non_block_transaction = function (data, otx, itx) {
@@ -148,26 +159,32 @@ module.exports = function (services, models) {
     return this.verify_transactions(nonBlockTransactions, parentTransactions, blockHeight, true, cb)
   }
   module.verify_transactions = function (nonBlockTransactions, parentTransactions, blockHeight, failExtra, cb) {
-    // TODO: use parentTransactions to get what is spent in the shadow chain
     var self = this
-    var functions = nonBlockTransactions.map((transaction) => self.verify.bind(self, transaction, blockHeight, failExtra))
+    if (!this.verify_double_spending(nonBlockTransactions, parentTransactions)) {
+      return cb(new exceptions.DoubleSpendingException())
+    }
+    var functions = nonBlockTransactions.map((transaction) => self.verify.bind(self, transaction, parentTransactions, blockHeight, failExtra))
     try {
       utils.serialReduce(functions, {
         change: 0,
         sources: {}
       }, (a, b) => {
-        for (var e in b.sources) {
-          if (a.sources[e]) {
-            throw new exceptions.DoubleSpendingException()
-          } else {
-            a.sources[e] = true
-          }
-        }
         a.change += b.change
         return a
       }, cb)
     } catch (e) {
       cb(e)
+    }
+  }
+  module.verify_double_spending = function (transactions, parentTransactions) {
+    var sources = _.flatMap(transactions.concat(parentTransactions), (tx) => tx.components)
+      .map((x) => x.source)
+      .filter((x) => x)
+    var uniq = _.uniq(sources)
+    if (uniq.length < sources.length) {
+      return false
+    } else {
+      return true
     }
   }
   module.verify_block_transactions = function (blockTransactions, parentTransactions, blockHeight, blockChange, miningReward, cb) {
@@ -182,50 +199,43 @@ module.exports = function (services, models) {
       return this.verify_transactions(blockTransactions, parentTransactions, blockHeight, false, cb)
     }
   }
-  module.verify = function (transaction, blockHeight, failExtra, cb) {
+  module.verify = function (transaction, parentTransactions, blockHeight, failExtra, cb) {
     var self = this
     var itx = transaction.components.filter((component) => component.type === 'itx')
     var nonItx = transaction.components.filter((component) => component.type !== 'itx')
     var otx = transaction.components.filter((component) => component.type === 'otx')
-    self.verify_in_out(itx, nonItx, function (err) {
+    var toHash = self.get_to_hash(nonItx)
+    return self.get_sources(itx, parentTransactions, blockHeight, function (err, itxSources) {
       if (err) {
         return cb(err)
       }
-      return self.get_sources(itx, blockHeight, function (err, itxSources) {
+      return self.verify_signatures(itxSources, toHash, function (err) {
         if (err) {
           return cb(err)
         }
-        return self.verify_signatures(itxSources, function (err) {
+        self.verify_amount(otx, itxSources, failExtra, function (err, change) {
           if (err) {
             return cb(err)
+          } else {
+            return cb(null, {
+              'change': change
+            })
           }
-          self.verify_amount(otx, itxSources, failExtra, function (err, change) {
-            if (err) {
-              return cb(err)
-            } else {
-              return cb(null, {
-                'change': change,
-                'sources': itxSources.map((x) => x.otx.hash)
-              })
-            }
-          })
         })
       })
     })
   }
-  module.verify_in_out = function (itx, nonItx, cb) {
+  module.get_to_hash = function (nonItx) {
     var otxHash = utils.hash(this.components_to_buffer(nonItx))
-    var nonMatchingItx = itx.filter((i) => i.to_hash !== otxHash)
-    if (nonMatchingItx.length) {
-      cb(new exceptions.NonMatchingInOutException())
-    } else {
-      cb(null)
-    }
+    return otxHash
   }
-  module.verify_signatures = function (itxSources, cb) {
+  module.verify_signatures = function (itxSources, toHash, cb) {
     var invalidSignatures = itxSources.map((itxSource) => {
-      var buffer = this.plain_itx_to_buffer(itxSource)
-      return utils.verify(buffer, itxSource.otx.public_key, itxSource.signature)
+      var buffer = this.plain_itx_to_buffer(_.assign({}, itxSource, {
+        'to_hash': toHash
+      }))
+      var valid = utils.verify(buffer, itxSource.otx.public_key, itxSource.signature)
+      return valid
     }).filter((valid) => !valid)
     if (invalidSignatures.length) {
       return cb(new exceptions.InvalidTransactionSignatureException())
@@ -240,8 +250,10 @@ module.exports = function (services, models) {
       return cb(new exceptions.UnavailableAmountException())
     } else return cb(null, available - spent)
   }
-  module.get_sources = function (itx, blockHeight, cb) {
+  module.get_sources = function (itx, parentTransactions, blockHeight, cb) {
     var sources = itx.map((i) => i.source)
+    var parentSources = utils.mapBy(_.flatMap(parentTransactions, (t) => t.components)
+      .filter((c) => c.type === 'otx'), 'hash')
     if (sources.length) {
       return models.selectUTXO(sources, blockHeight,
         function (err, results) {
@@ -250,7 +262,13 @@ module.exports = function (services, models) {
           } else {
             var sources = utils.mapBy(results, 'hash')
             for (var i of itx) {
-              i.otx = sources[i.source]
+              if (sources[i.source]) {
+                i.otx = sources[i.source]
+              } else if (parentSources[i.source]) {
+                i.otx = parentSources[i.source]
+              } else {
+                return cb(new exceptions.NotFoundSourceException())
+              }
             }
             return cb(null, itx)
           }
@@ -270,7 +288,7 @@ module.exports = function (services, models) {
     return utils.hash(this.component_to_buffer(component))
   }
   module.components_to_buffer = function (components) {
-    return Buffer.concat(components.map((component) => this.component_to_buffer(component)))
+    return Buffer.concat(components.map((component) => this.component_to_buffer(component)).sort())
   }
   module.component_to_buffer = function (component) {
     if (component.type === 'itx') {

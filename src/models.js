@@ -10,21 +10,21 @@ module.exports = class Models {
     this.connection = connection
     this.blockProperties = ['height', 'parent_hash', 'hash', 'public_key', 'signature', 'merkle_root', 'created_at', 'received_at']
     this.transactionProperties = ['block_hash', 'hash', 'block_transaction']
-    this.itxProperties = ['tx_hash', 'hash', 'source', 'sign', 'created_at']
+    this.itxProperties = ['tx_hash', 'hash', 'source', 'signature', 'created_at']
     this.otxProperties = ['tx_hash', 'hash', 'amount', 'public_key', 'created_at']
     this.rawDataProperties = ['tx_hash', 'hash', 'data', 'created_at']
   }
   selectUTXO(hashes, blockHeight, cb) {
     return this.connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
-                             LEFT OUTER JOIN tx AS it ON (i.tx = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
-                             WHERE (i.source IS NULL OR block.Height <= ?) AND o.hash in ?`, [blockHeight, hashes],
+                             LEFT OUTER JOIN tx AS it ON (i.tx_hash = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
+                             WHERE (i.source IS NULL OR block.Height <= ?) AND o.hash in (?)`, [blockHeight, hashes],
       function (err, results, fields) {
         return cb(err, results)
       })
   }
   selectUTXOByPublicKey(publicKey, cb) {
     return this.connection.query(`SELECT o.amount, o.public_key, o.hash FROM otx AS o LEFT OUTER JOIN itx AS i ON (o.hash = i.source)
-                             LEFT OUTER JOIN tx AS it ON (i.tx = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
+                             LEFT OUTER JOIN tx AS it ON (i.tx_hash = it.hash) LEFT OUTER JOIN block ON (it.block_hash = block.hash)
                              WHERE (i.source IS NULL) AND o.public_key = ?`, [publicKey],
       function (err, results, fields) {
         return cb(err, results)
@@ -83,12 +83,12 @@ module.exports = class Models {
       var transactions = _.values(_.groupBy(b, (r) => r.tx.hash))
       block.transactions = transactions.map((t) => {
         var transaction = t[0].tx
-        var components = _.flatMap(t, (s) => {
+        var components = _.uniqBy(_.flatMap(t, (s) => {
           s.itx.type = 'itx'
           s.otx.type = 'otx'
           s.raw_data.type = 'raw_data'
           return [s.itx, s.otx, s.raw_data]
-        }).filter((v) => v.hash)
+        }).filter((v) => v.hash), (x) => x.hash)
         transaction.components = components
         return transaction
       })
@@ -110,7 +110,7 @@ module.exports = class Models {
     })
   }
   getBlockByHash(hash, cb) {
-    var condition = 'WHERE block.hash = ?'
+    var condition = 'block.hash = ?'
     var params = [hash]
     return this.getWholeBlocksCondition(condition, params, 1, (err, blocks) => {
       if (err) {
@@ -123,19 +123,24 @@ module.exports = class Models {
     })
   }
   getWholeBlocks(from, limit, cb) {
-    var heightMax = from ? 'WHERE height <= ?' : ''
+    var heightMax = from ? 'height <= ?' : ''
     var params = from ? [from] : []
     return this.getWholeBlocksCondition(heightMax, params, limit, cb)
   }
   getWholeBlocksCondition(condition, params, limit, cb) {
-    return this.connection.query({
-        'sql': `SELECT * FROM block JOIN tx ON (block.hash = tx.block_hash)
+    // sorry about that ;)
+    condition = condition ? 'AND ' + condition : condition
+    var join = `block JOIN tx ON (block.hash = tx.block_hash)
           LEFT OUTER JOIN itx ON (tx.hash = itx.tx_hash)
           LEFT OUTER JOIN otx ON (tx.hash = otx.tx_hash)
-          LEFT OUTER JOIN raw_data ON (tx.hash = raw_data.tx_hash)
-          ${condition} ORDER BY height DESC LIMIT ?`,
+          LEFT OUTER JOIN raw_data ON (tx.hash = raw_data.tx_hash)`
+    var query = `SELECT * FROM ${join}
+        WHERE height > (SELECT max(height) - ? FROM ${join} WHERE 1 = 1 ${condition})
+        ${condition} ORDER BY height DESC`
+    return this.connection.query({
+        'sql': query,
         nestTables: true
-      }, params.concat([limit]),
+      }, [limit].concat(params).concat(params),
       (err, results, fields) => {
         if (err) {
           return cb(err)
@@ -181,7 +186,7 @@ module.exports = class Models {
     return this.insert_obj('tx', _.pick(transaction, this.transactionProperties))
   }
   add_itx(itx) {
-    return this.insert_obj('itx', _.pick(itx, this.transactionProperties))
+    return this.insert_obj('itx', _.pick(itx, this.itxProperties))
   }
   add_otx(otx) {
     return this.insert_obj('otx', _.pick(otx, this.otxProperties))

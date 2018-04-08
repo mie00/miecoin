@@ -4,32 +4,48 @@ module.exports = function (services) {
   var module = {}
   var newLock = new ReadWriteLock()
   module.pay = (req, res) => {
+    var amount = Number(req.body.amount)
+    var publicKey = req.body.to
+    var fee = Number(req.body.fee)
+    var data = []
+    if (req.body.data) {
+      data.push(req.body.data)
+    }
+    if (!amount || !publicKey || !fee) {
+      return res.status(404).end()
+    }
     newLock.writeLock(function (release) {
-      return services.block.getBlockHeight((err, height) => {
+      return services.wallet.pay(data, [{
+        'amount': req.body.amount,
+        'public_key': req.body.to,
+        'created_at': Date.now()
+      }], req.body.fee, (err) => {
+        release()
         if (err) {
-          return res.send(500).end()
+          return res.status(404).end()
+        } else {
+          return res.status(200).end()
         }
-        return services.wallet.pay([], {'amount': req.body.amount, 'public_key': req.body.to, 'created_at': Date.now()}, req.body.fee, height, (err) => {
-          release()
-          if (err) {
-            return res.send(200).end()
-          } else {
-            return res.send(404).end()
-          }
-        })
       })
     })
   }
   module.getTotal = (req, res) => {
     newLock.readLock(function (release) {
-      release()
-      return res.send(503).end()
+      return services.wallet.getTotal((err, total) => {
+        release()
+        if (err) {
+          return res.status(503).end()
+        }
+        return res.status(200).send({
+          'total': total
+        })
+      })
     })
   }
   module.createBlock = (req, res) => {
     newLock.writeLock(function (release) {
       release()
-      return res.send(503).end()
+      return res.status(503).end()
     })
   }
   return module

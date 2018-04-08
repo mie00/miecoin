@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS itx (
     tx_hash VARCHAR(255) NOT NULL,
     hash VARCHAR(255) NOT NULL PRIMARY KEY,
     source VARCHAR(255) NOT NULL,
-    sign VARCHAR(1024) NOT NULL,
+    signature VARCHAR(1024) NOT NULL,
     created_at BIGINT NOT NULL,
     CONSTRAINT itx_tx_hash_refernece FOREIGN KEY (tx_hash)
         REFERENCES tx (hash) ON DELETE CASCADE,

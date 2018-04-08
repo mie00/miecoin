@@ -62,13 +62,6 @@ var OverSpendingException = module.exports.OverSpendingException = function Over
 }
 OverSpendingException.prototype = Object.create(Error.prototype)
 
-var NonMatchingInOutException = module.exports.NonMatchingInOutException = function NonMatchingInOutException (message) {
-  this.message = message
-  this.name = 'NonMatchingInOutException'
-  Error.captureStackTrace(this, NonMatchingInOutException)
-}
-NonMatchingInOutException.prototype = Object.create(Error.prototype)
-
 var InvalidTransactionSignatureException = module.exports.InvalidTransactionSignatureException = function InvalidTransactionSignatureException (message) {
   this.message = message
   this.name = 'InvalidTransactionSignatureException'
@@ -96,6 +89,14 @@ var SameHeightException = module.exports.SameHeightException = function SameHeig
   Error.captureStackTrace(this, SameHeightException)
 }
 SameHeightException.prototype = Object.create(Error.prototype)
+
+var LongerChainException = module.exports.LongerChainException = function LongerChainException (chainHeight, blockHeight) {
+  this.chainHeight = chainHeight
+  this.blockHeight = blockHeight
+  this.name = 'LongerChainException'
+  Error.captureStackTrace(this, LongerChainException)
+}
+LongerChainException.prototype = Object.create(Error.prototype)
 
 var ItxInBlockTransactionException = module.exports.ItxInBlockTransactionException = function ItxInBlockTransactionException (message) {
   this.message = message
@@ -153,3 +154,10 @@ var DifferenetChainException = module.exports.DifferenetChainException = functio
   Error.captureStackTrace(this, DifferenetChainException)
 }
 DifferenetChainException.prototype = Object.create(Error.prototype)
+
+var NotFoundSourceException = module.exports.NotFoundSourceException = function NotFoundSourceException (message) {
+  this.message = message
+  this.name = 'NotFoundSourceException'
+  Error.captureStackTrace(this, NotFoundSourceException)
+}
+NotFoundSourceException.prototype = Object.create(Error.prototype)

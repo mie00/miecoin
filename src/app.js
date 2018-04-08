@@ -36,14 +36,14 @@ class App {
     app.get('/api/block_by_hash', apiController.getBlockByHash)
     app.get('/api/transaction_by_hash', apiController.getTransactionByHash)
 
-    app.all('/rpc/.*', (req, res, next) => {
+    app.all('/rpc/*', (req, res, next) => {
       var auth = req.headers['authorization']
       var token = Buffer.from(rpcParams.username + ':' + rpcParams.password).toString('base64')
       var expected = 'Basic ' + token
       if (expected === auth) {
         return next()
       } else {
-        return res.send(401).end()
+        return res.status(401).end()
       }
     })
     app.post('/rpc/block', rpcController.createBlock)

@@ -31,24 +31,34 @@ class Chain {
     var blockMap = utils.mapBy(blocks, 'height')
     var lastOld = 1
 
-    return utils.serial(blocks
-      .map((block) => (callback) => {
-        this.services.block.verify(block, authors, this.miningReward, blockMap, {}, (err) => {
-          if (err instanceof exceptions.SameHeightException && err.height < maxBlock) {
-            return callback()
-          } else if (err instanceof exceptions.DuplicateBlockException && err.height < maxBlock) {
-            lastOld = Math.min(lastOld, err.height)
-            return callback()
-          } else {
-            return callback(err)
+    return this.models.getLastBlock((err, last) => {
+      if (err) {
+        return cb(err)
+      }
+      if (last.height > maxBlock.height) {
+        return cb(new exceptions.LongerChainException(last.height, maxBlock.height))
+      }
+      var parentTransactions = []
+      return utils.serial(blocks
+        .map((block) => (callback) => {
+          this.services.block.verify(block, authors, this.miningReward, blockMap, parentTransactions, (err) => {
+            parentTransactions = parentTransactions.concat(block.transactions)
+            if (err instanceof exceptions.SameHeightException && err.height < maxBlock) {
+              return callback()
+            } else if (err instanceof exceptions.DuplicateBlockException && err.height < maxBlock) {
+              lastOld = Math.min(lastOld, err.height)
+              return callback()
+            } else {
+              return callback(err)
+            }
+          })
+        }), (err) => {
+          if (err) {
+            return cb(err)
           }
+          return cb(null, lastOld + 1)
         })
-      }), (err) => {
-        if (err) {
-          return cb(err)
-        }
-        return cb(null, lastOld + 1)
-      })
+    })
   }
   getBlocks(from, limit, cb) {
     limit = limit || 1

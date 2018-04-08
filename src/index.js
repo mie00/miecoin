@@ -19,8 +19,10 @@ const host = config.get('api.host')
 
 var self = `${host}:${port}`
 
-app.services.wallet.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
-app.services.pool.setKeyPair(config.get('wallet.private_key'), config.get('wallet.public_key'))
+var privateKey = config.get('wallet.private_key').trim()
+var publicKey = config.get('wallet.public_key').trim()
+app.services.wallet.setKeyPair(privateKey, publicKey)
+app.services.pool.setKeyPair(privateKey, publicKey)
 app.services.pool.setMiningReward(config.get('mining.reward'))
 app.services.chain.setMiningReward(config.get('mining.reward'))
 app.services.network.setDefaultPort(config.get('api.port'))

@@ -16,7 +16,7 @@ module.exports =
       this.miningReward = miningReward
     }
     add (transaction, cb) {
-      return this.verifyTransaction(transaction, function (err, res) {
+      return this.verifyTransaction(transaction, (err, res) => {
         if (err) {
           return cb(err)
         } else {
@@ -66,7 +66,7 @@ module.exports =
       })
     }
     addToPool (transaction) {
-      var hash = this.services.transaction.calculate_hash()
+      var hash = this.services.transaction.calculate_hash(transaction)
       this.transactions[hash] = transaction
     }
     getFromPool () {

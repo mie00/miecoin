@@ -20,6 +20,7 @@ describe('cycle', function () {
     var modelsStub = sinon.stub(models)
     var services = new Services(modelsStub)
     modelsStub.getLastBlock.yields(null, undefined)
+    modelsStub.getChainHeight.yields(null, undefined)
     modelsStub.removeFrom.returns('removeFrom')
     modelsStub.add_block.returns('add bl')
     modelsStub.add_transaction.returns('add tr')
@@ -41,6 +42,7 @@ describe('cycle', function () {
     var modelsStub = sinon.stub(models)
     var services = new Services(modelsStub)
     modelsStub.getGenesisBlock.yields(null, undefined)
+    modelsStub.getChainHeight.yields(null, undefined)
     modelsStub.removeFrom.returns('removeFrom')
     modelsStub.add_block.returns('add bl')
     modelsStub.add_transaction.returns('add tr')
@@ -64,6 +66,7 @@ describe('cycle', function () {
     var modelsStub = sinon.stub(models)
     var services = new Services(modelsStub)
     modelsStub.getLastBlock.yields(null, factory.genesisBlock)
+    modelsStub.getChainHeight.yields(null, 1)
     modelsStub.removeFrom.returns('removeFrom')
     modelsStub.add_block.returns('add bl')
     modelsStub.add_transaction.returns('add tr')
@@ -102,28 +105,29 @@ describe('cycle', function () {
     var services
     var models = new Models()
     var modelsStub = sinon.stub(models)
-    before(function () {
+    beforeEach(function () {
       services = new Services(modelsStub)
       services.wallet.setKeyPair(factory.pr1, factory.pu1)
+      modelsStub.getChainHeight.yields(null, 2)
       modelsStub.selectUTXOByPublicKey.yields(null, [factory.firstBlockTransactionUTXO])
       modelsStub.selectUTXO.yields(null, [factory.firstBlockTransactionUTXO])
     })
     it('should work', function (done) {
-      services.wallet.pay([], [{'amount': 20, 'public_key': factory.pu2}], 10, 2, function (err, transaction) {
+      services.wallet.pay([], [{'amount': 20, 'public_key': factory.pu2}], 10, function (err, transaction) {
         should(err).equal(null)
         transaction.components.length.should.equal(3)
         done()
       })
     })
     it('should work if barely enough money', function (done) {
-      services.wallet.pay([], [{'amount': 90, 'public_key': factory.pu2}], 10, 2, function (err, transaction) {
+      services.wallet.pay([], [{'amount': 90, 'public_key': factory.pu2}], 10, function (err, transaction) {
         should(err).equal(null)
         transaction.components.length.should.equal(2)
         done()
       })
     })
     it('should not work if no enough money', function (done) {
-      services.wallet.pay([], [{'amount': 90, 'public_key': factory.pu2}], 20, 2, function (err, transaction) {
+      services.wallet.pay([], [{'amount': 90, 'public_key': factory.pu2}], 20, function (err, transaction) {
         (() => should.ifError(err)).should.throw(new exceptions.NotEnoughMoneyToSpendException())
         done()
       })

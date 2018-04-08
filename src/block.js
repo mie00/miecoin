@@ -36,7 +36,7 @@ module.exports = function (services, models) {
     })
   }
   module.generate_block = function (oldBlock, transactions, miningReward, privateKey, publicKey, data, createdAt, cb) {
-    return services.transaction.generate_block_transaction(transactions, oldBlock.height + 1, miningReward, publicKey, data, createdAt, (err, blockTransaction) => {
+    return services.transaction.generate_block_transaction(transactions, miningReward, publicKey, data, createdAt, (err, blockTransaction) => {
       if (err) {
         return cb(err)
       } else {
