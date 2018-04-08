@@ -68,6 +68,7 @@ module.exports = function (services) {
               if (err) {
                 return cb(err)
               } else {
+                services.pool.reverify(newBlocks)
                 return cb(null)
               }
             })

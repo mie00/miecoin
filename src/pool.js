@@ -1,3 +1,4 @@
+var _ = require('lodash')
 module.exports =
   class Pool {
     constructor(services, models) {
@@ -82,6 +83,20 @@ module.exports =
     }
     addToData(data) {
       this.data.push(data)
+    }
+    reverify(blocks) {
+      var components = _.flatMap(_.flatMap(blocks, 'transactions'), 'components')
+      var sources = components.map((x) => x.source).filter((x) => x)
+      Object.keys(this.transactions).forEach((x) => {
+        var innerComponents = _.flatMap(this.transactions[x], 'components')
+        var innerSources = components.map((x) => x.source).filter((x) => x)
+        for (var s of innerSources) {
+          if (sources.indexOf(s) !== -1) {
+            delete this.transactions[x]
+            return
+          }
+        }
+      })
     }
     emptyPool() {
       Object.keys(this.transactions).forEach((x) => {
