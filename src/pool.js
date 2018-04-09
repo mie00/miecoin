@@ -64,7 +64,7 @@ module.exports =
       })
     }
     getUnspentMoney(publicKey, cb) {
-      return this.models.selectUTXOByPublicKey(this.publicKey, (err, res) => {
+      return this.models.selectUTXOByPublicKey(publicKey, (err, res) => {
         if (err) {
           return cb(err)
         }
